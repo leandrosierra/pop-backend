@@ -18,12 +18,16 @@ const targetFor = (url = "") => {
 
 const proxyHttp = (clientRequest, clientResponse) => {
   const target = targetFor(clientRequest.url);
+  const apiRequest = isApiRequest(clientRequest.url);
   const headers = {
     ...clientRequest.headers,
     host: `${target.host}:${target.port}`,
     "x-forwarded-host": clientRequest.headers.host || "",
     "x-forwarded-proto": "http"
   };
+  if (apiRequest && headers.origin) {
+    headers.origin = `http://localhost:${proxyPort}`;
+  }
 
   const upstream = http.request(
     {

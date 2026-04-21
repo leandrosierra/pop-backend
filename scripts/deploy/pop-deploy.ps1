@@ -48,6 +48,8 @@ function Get-EnvConfig([string]$Key) {
   $property = $config.environments.PSObject.Properties[$Key]
   if (!$property) { throw "Environnement inconnu: $Key" }
   $entry = $property.Value
+  $apiOriginProperty = $entry.PSObject.Properties['apiOrigin']
+  $apiOrigin = if ($apiOriginProperty -and $apiOriginProperty.Value) { [string]$apiOriginProperty.Value } else { "http://localhost:$([int]$entry.backendPort)" }
   return [pscustomobject]@{
     Key          = $Key
     Label        = [string]$entry.label
@@ -55,7 +57,7 @@ function Get-EnvConfig([string]$Key) {
     FrontendPort = [int]$entry.frontendPort
     ProxyPort    = [int]$entry.proxyPort
     PromoteTo    = if ($entry.promoteTo) { [string]$entry.promoteTo } else { $null }
-    ApiOrigin    = "http://localhost:$([int]$entry.backendPort)"
+    ApiOrigin    = $apiOrigin
     FrontendUrl  = "http://localhost:$([int]$entry.frontendPort)"
     ProxyUrl     = "http://localhost:$([int]$entry.proxyPort)"
   }

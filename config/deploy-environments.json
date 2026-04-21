@@ -19,6 +19,7 @@
       "backendPort": 8280,
       "frontendPort": 8282,
       "proxyPort": 8290,
+      "apiOrigin": "same-origin",
       "promoteTo": null
     }
   }
