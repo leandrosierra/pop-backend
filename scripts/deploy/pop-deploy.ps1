@@ -167,14 +167,14 @@ function Ensure-MariaDb {
   if (!(Test-Listening 3306)) { throw 'MariaDB n a pas ouvert le port 3306.' }
 }
 
-function Stop-LegacyTargetWarProcess {
+function Stop-TargetWarProcess {
   Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
     Where-Object { $_.CommandLine -match 'target\\app-server-1\.0\.0\.war' } |
     ForEach-Object { Stop-Pid ([int]$_.ProcessId) }
 }
 
 function Build-Backend {
-  Stop-LegacyTargetWarProcess
+  Stop-TargetWarProcess
   $javaHome = Resolve-JavaHome
   $env:JAVA_HOME = $javaHome
   $env:Path = "$javaHome\bin;$env:Path"
@@ -230,7 +230,6 @@ function Start-Frontend($EnvConfig) {
   $logs = Get-LogRoot $EnvConfig
   New-Item -ItemType Directory -Force -Path $logs | Out-Null
   $env:EXPO_PUBLIC_POP_API_ORIGIN = $EnvConfig.ApiOrigin
-  $env:EXPO_PUBLIC_POP_API_MODE = 'legacy'
   $env:EXPO_PUBLIC_POP_ENV_LABEL = $EnvConfig.Label
   Step "$($EnvConfig.Label) front -> $($EnvConfig.FrontendPort)"
   Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'web', '--', '--clear', '--port', "$($EnvConfig.FrontendPort)", '--host', 'localhost') -WorkingDirectory $FrontendRoot -RedirectStandardOutput (Join-Path $logs 'frontend.out.log') -RedirectStandardError (Join-Path $logs 'frontend.err.log') -WindowStyle Hidden | Out-Null
