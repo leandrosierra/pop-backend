@@ -72,6 +72,7 @@ public class UserController {
     @DeleteMapping("/current")
     public ResponseEntity<?> deleteCurrentUser() {
         User user = loadCurrentUser();
+        rejectAdminDeletion(user);
         userRepository.delete(user);
         return ResponseEntity.ok().build();
     }
@@ -160,6 +161,7 @@ public class UserController {
         SecurityUtils.requireCurrentUserOrAdmin(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        rejectAdminDeletion(user);
         userRepository.delete(user);
         return ResponseEntity.ok().build();
     }
@@ -198,6 +200,12 @@ public class UserController {
             return "FR";
         }
         return code.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private void rejectAdminDeletion(User user) {
+        if (user.getRole() != null && "ADMIN".equals(user.getRole().getCode())) {
+            throw new SecurityException("Forbidden");
+        }
     }
 
     private boolean matchesPassword(String rawPassword, User user) {
@@ -265,6 +273,5 @@ public class UserController {
         }
     }
 }
-
 
 
