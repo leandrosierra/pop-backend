@@ -1,0 +1,14 @@
+<web-app>
+
+<!-- 	<servlet>
+	
+		<init-param>
+		<param-name>random</param-name>
+		<param-value>org.test.randomizer</param-value>
+		</init-param>
+	
+		<load-on-startup>1</load-on-startup>
+	
+	</servlet> -->
+
+</web-app>
