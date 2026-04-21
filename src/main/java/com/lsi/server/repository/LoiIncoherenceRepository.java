@@ -12,6 +12,9 @@ import com.lsi.server.model.LoiIncoherence;
 @Repository
 public interface LoiIncoherenceRepository extends JpaRepository<LoiIncoherence, Long> {
 
+	@Query("SELECT i FROM LoiIncoherence i order by i.dateCreation desc")
+	Page<LoiIncoherence> findIncoherencesRecentes(Pageable pageable);
+
 	@Query("SELECT i FROM LoiIncoherence i where i.loi.id = :loiId or i.loiReference.id = :loiId order by i.dateCreation desc")
 	Page<LoiIncoherence> findIncoherencesByLoiId(@Param("loiId") Long loiId, Pageable pageable);
 }

@@ -355,6 +355,8 @@ function Seed-Database {
   if ($LASTEXITCODE -ne 0) { throw 'Seed SQL echoue.' }
   & $mysql -h 127.0.0.1 -P 3306 -u $user "--password=$pwd" --database poplitic_db --execute "SOURCE SQL/LOCAL_LIVE_SEED.sql"
   if ($LASTEXITCODE -ne 0) { throw 'Seed SQL echoue.' }
+  & $mysql -h 127.0.0.1 -P 3306 -u $user "--password=$pwd" --database poplitic_db --execute "SOURCE SQL/LOCAL_FEATURE_SEED.sql"
+  if ($LASTEXITCODE -ne 0) { throw 'Seed SQL echoue.' }
 }
 
 function Show-Status($EnvConfig) {

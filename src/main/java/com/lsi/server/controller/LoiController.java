@@ -83,7 +83,7 @@ public class LoiController {
 
 	@GetMapping("/incoherence/all")
 	public Page<LoiIncoherence> getAllIncoherences(@PageableDefault(size = 10) Pageable pageable) {
-		return incoherenceRepository.findAll(pageable);
+		return incoherenceRepository.findIncoherencesRecentes(pageable);
 	}
 
 	@GetMapping("/{id}/incoherences")

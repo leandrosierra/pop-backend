@@ -12,6 +12,6 @@ import com.lsi.server.model.QuestionComment;
 @Repository
 public interface QuestionCommentRepository extends JpaRepository<QuestionComment, Long> {
 
-	@Query("SELECT c FROM QuestionComment c where c.question.id = :questionId order by c.dateCreation asc")
+	@Query("SELECT c FROM QuestionComment c where c.question.id = :questionId order by c.dateCreation desc")
 	Page<QuestionComment> findCommentsByQuestionId(@Param("questionId") Long questionId, Pageable pageable);
 }
