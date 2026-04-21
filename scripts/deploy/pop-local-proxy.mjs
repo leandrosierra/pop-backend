@@ -39,6 +39,7 @@ const proxyHttp = (clientRequest, clientResponse) => {
     },
     (upstreamResponse) => {
       clientResponse.writeHead(upstreamResponse.statusCode || 502, upstreamResponse.headers);
+      upstreamResponse.on("error", () => clientResponse.destroy());
       upstreamResponse.pipe(clientResponse);
     }
   );
@@ -49,6 +50,8 @@ const proxyHttp = (clientRequest, clientResponse) => {
     clientResponse.end("POP local service unavailable");
   });
 
+  clientRequest.on("error", () => upstream.destroy());
+  clientResponse.on("error", () => upstream.destroy());
   clientRequest.pipe(upstream);
 };
 
@@ -70,6 +73,8 @@ const proxyUpgrade = (request, socket, head) => {
   });
 
   upstream.on("error", () => socket.destroy());
+  socket.on("error", () => upstream.destroy());
+  socket.on("close", () => upstream.destroy());
 };
 
 const server = http.createServer(proxyHttp);
