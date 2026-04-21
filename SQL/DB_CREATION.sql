@@ -518,10 +518,18 @@ TRIGGER `poplitic_db`.`USERS_BEFORE_INSERT`
 BEFORE INSERT ON `poplitic_db`.`USERS`
 FOR EACH ROW
 BEGIN
+	DECLARE default_language_id INT;
+
 	INSERT INTO `poplitic_db`.`USER_PARAMETRES` () VALUES ();
     SET NEW.id_parametre = LAST_INSERT_id();
-    
-    INSERT INTO `poplitic_db`.`USER_PARAMETRES_LANGUE` (`id_parametre`, `id_langue`) VALUES (LAST_INSERT_id(), 1);
+
+    SELECT `id_langue`
+    INTO default_language_id
+    FROM `poplitic_db`.`LANGUES_REF`
+    WHERE `code` = 'FR'
+    LIMIT 1;
+
+    INSERT INTO `poplitic_db`.`USER_PARAMETRES_LANGUE` (`id_parametre`, `id_langue`) VALUES (LAST_INSERT_id(), default_language_id);
     
     INSERT INTO `poplitic_db`.`USER_POSITION` (`latitude`, `longitude`) VALUES (null,null);
     SET NEW.id_position = LAST_INSERT_id();

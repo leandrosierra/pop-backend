@@ -2,11 +2,13 @@ package com.lsi.server.controller;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,6 +45,9 @@ public class UserController {
     @Autowired
     TokenService tokenService;
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
     @GetMapping("/all")
     public List<User> getAll() {
         SecurityUtils.requireAdmin();
@@ -78,6 +83,34 @@ public class UserController {
         user.setDateModification(new Date());
         userRepository.save(user);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/current/language")
+    public LanguageResponse getCurrentLanguage() {
+        return new LanguageResponse(readLanguageCode(loadCurrentUser()));
+    }
+
+    @PutMapping("/current/language")
+    public LanguageResponse updateCurrentLanguage(@RequestBody LanguageRequest languageRequest) {
+        User user = loadCurrentUser();
+        String code = normalizeLanguageCode(languageRequest == null ? null : languageRequest.getCode());
+        List<Integer> languageIds = jdbcTemplate.queryForList(
+                "SELECT id_langue FROM LANGUES_REF WHERE UPPER(code) = ? LIMIT 1",
+                Integer.class,
+                code);
+        if (languageIds.isEmpty()) {
+            throw new ResourceNotFoundException("Language", "code", code);
+        }
+
+        int parameterId = user.getParametres().getIdParametre();
+        jdbcTemplate.update("DELETE FROM USER_PARAMETRES_LANGUE WHERE id_parametre = ?", parameterId);
+        jdbcTemplate.update(
+                "INSERT INTO USER_PARAMETRES_LANGUE (id_parametre, id_langue, ordre) VALUES (?, ?, 1)",
+                parameterId,
+                languageIds.get(0));
+        user.setDateModification(new Date());
+        userRepository.save(user);
+        return new LanguageResponse(code);
     }
 
     @GetMapping("/{id}")
@@ -145,6 +178,28 @@ public class UserController {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", principal.getUserId()));
     }
 
+    private String readLanguageCode(User user) {
+        if (user.getParametres() == null) {
+            return "FR";
+        }
+
+        List<String> codes = jdbcTemplate.queryForList(
+                "SELECT l.code FROM USER_PARAMETRES_LANGUE upl " +
+                        "JOIN LANGUES_REF l ON l.id_langue = upl.id_langue " +
+                        "WHERE upl.id_parametre = ? " +
+                        "ORDER BY COALESCE(upl.ordre, 0), l.id_langue LIMIT 1",
+                String.class,
+                user.getParametres().getIdParametre());
+        return codes.isEmpty() ? "FR" : normalizeLanguageCode(codes.get(0));
+    }
+
+    private String normalizeLanguageCode(String code) {
+        if (code == null || code.trim().isEmpty()) {
+            return "FR";
+        }
+        return code.trim().toUpperCase(Locale.ROOT);
+    }
+
     private boolean matchesPassword(String rawPassword, User user) {
         String storedPassword = user.getPassword();
         if (storedPassword == null || rawPassword == null) {
@@ -185,8 +240,31 @@ public class UserController {
             return user;
         }
     }
-}
 
+    public static class LanguageRequest {
+        private String code;
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+    }
+
+    public static class LanguageResponse {
+        private String code;
+
+        public LanguageResponse(String code) {
+            this.code = code;
+        }
+
+        public String getCode() {
+            return code;
+        }
+    }
+}
 
 
 

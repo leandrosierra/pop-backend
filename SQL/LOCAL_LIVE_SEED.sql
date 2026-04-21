@@ -11,6 +11,45 @@ SET @user_password_hash = '$2a$12$ezNWmur7lKIVPok4XpBTo.ojgyV73kCiCYUTHfe7wLfnIG
 
 ALTER TABLE `USERS` MODIFY `password` VARCHAR(100) NOT NULL;
 
+INSERT INTO `LANGUES_REF` (`code`, `libelle`) VALUES
+('FR', 'Français'),
+('EN', 'Anglais'),
+('DE', 'Allemand'),
+('ES', 'Espagnol'),
+('IT', 'Italien'),
+('PT', 'Portugais'),
+('NL', 'Néerlandais'),
+('SV', 'Suédois'),
+('DA', 'Danois'),
+('FI', 'Finnois'),
+('NO', 'Norvégien'),
+('IS', 'Islandais'),
+('GA', 'Irlandais'),
+('PL', 'Polonais'),
+('CS', 'Tchèque'),
+('SK', 'Slovaque'),
+('HU', 'Hongrois'),
+('RO', 'Roumain'),
+('BG', 'Bulgare'),
+('EL', 'Grec'),
+('HR', 'Croate'),
+('SL', 'Slovène'),
+('LT', 'Lituanien'),
+('LV', 'Letton'),
+('ET', 'Estonien'),
+('MT', 'Maltais'),
+('SQ', 'Albanais'),
+('SR', 'Serbe'),
+('BS', 'Bosnien'),
+('MK', 'Macédonien'),
+('UK', 'Ukrainien'),
+('RU', 'Russe'),
+('TR', 'Turc'),
+('LB', 'Luxembourgeois'),
+('BE', 'Biélorusse'),
+('CA', 'Catalan')
+ON DUPLICATE KEY UPDATE `libelle` = VALUES(`libelle`);
+
 CREATE TEMPORARY TABLE `tmp_live_digits` (`n` INT NOT NULL PRIMARY KEY) ENGINE = MEMORY;
 INSERT INTO `tmp_live_digits` (`n`)
 VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);

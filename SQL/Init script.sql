@@ -1,5 +1,42 @@
 
-INSERT INTO `poplitic_db`.`LANGUES_REF` (`code`,`libelle`) VALUES ("FR","Français");
+INSERT INTO `poplitic_db`.`LANGUES_REF` (`code`,`libelle`) VALUES
+("FR","Français"),
+("EN","Anglais"),
+("DE","Allemand"),
+("ES","Espagnol"),
+("IT","Italien"),
+("PT","Portugais"),
+("NL","Néerlandais"),
+("SV","Suédois"),
+("DA","Danois"),
+("FI","Finnois"),
+("NO","Norvégien"),
+("IS","Islandais"),
+("GA","Irlandais"),
+("PL","Polonais"),
+("CS","Tchèque"),
+("SK","Slovaque"),
+("HU","Hongrois"),
+("RO","Roumain"),
+("BG","Bulgare"),
+("EL","Grec"),
+("HR","Croate"),
+("SL","Slovène"),
+("LT","Lituanien"),
+("LV","Letton"),
+("ET","Estonien"),
+("MT","Maltais"),
+("SQ","Albanais"),
+("SR","Serbe"),
+("BS","Bosnien"),
+("MK","Macédonien"),
+("UK","Ukrainien"),
+("RU","Russe"),
+("TR","Turc"),
+("LB","Luxembourgeois"),
+("BE","Biélorusse"),
+("CA","Catalan")
+ON DUPLICATE KEY UPDATE `libelle` = VALUES(`libelle`);
 
 INSERT INTO `poplitic_db`.`ROLES` (`code`,`libelle`) VALUES ("ADMIN","Administrateur");
 INSERT INTO `poplitic_db`.`ROLES` (`code`,`libelle`) VALUES ("USER","Utilisateur");
