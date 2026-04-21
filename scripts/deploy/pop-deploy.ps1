@@ -249,6 +249,7 @@ function Start-Frontend($EnvConfig) {
   $env:EXPO_PUBLIC_POP_API_ORIGIN = $EnvConfig.ApiOrigin
   $env:EXPO_PUBLIC_POP_ENV_LABEL = $EnvConfig.Label
   Set-EnvFromUserIfDefined @(
+    'EXPO_PUBLIC_POP_SHARE_ORIGIN',
     'EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID',
     'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID',
     'EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID',
