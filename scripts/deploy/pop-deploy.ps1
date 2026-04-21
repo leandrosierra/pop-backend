@@ -213,6 +213,7 @@ function Start-Frontend($EnvConfig) {
   $env:EXPO_PUBLIC_POP_API_ORIGIN = $EnvConfig.ApiOrigin
   $env:EXPO_PUBLIC_POP_API_MODE = 'legacy'
   $env:EXPO_PUBLIC_POP_API_BASIC_AUTH = 'user:password'
+  $env:EXPO_PUBLIC_POP_ENV_LABEL = $EnvConfig.Label
   Step "$($EnvConfig.Label) front -> $($EnvConfig.FrontendPort)"
   Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'web', '--', '--port', "$($EnvConfig.FrontendPort)", '--host', 'localhost') -WorkingDirectory $FrontendRoot -RedirectStandardOutput (Join-Path $logs 'frontend.out.log') -RedirectStandardError (Join-Path $logs 'frontend.err.log') -WindowStyle Hidden | Out-Null
   Wait-Port $EnvConfig.FrontendPort $HealthcheckTimeoutSec
