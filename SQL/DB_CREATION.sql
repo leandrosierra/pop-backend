@@ -505,6 +505,344 @@ CREATE INDEX `fk_POP_USERS_has_USER_INTERETS_REF_USER_INTERETS_REF1_idx` ON `pop
 
 CREATE INDEX `fk_USER_INTERETS_copy1_POP_QUESTIONS1_idx` ON `poplitic_db`.`QUESTION_INTERETS` (`id_question` ASC) ;
 
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`QUESTION_COMMENTS`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`QUESTION_COMMENTS` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTION_COMMENTS` (
+  `id_comment` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_question` INT(11) NOT NULL,
+  `id_user` INT(11) NOT NULL,
+  `id_parent_comment` INT(11) NULL,
+  `contenu` TEXT NOT NULL,
+  `date_creation` DATETIME NULL,
+  `date_modification` DATETIME NULL,
+  PRIMARY KEY (`id_comment`),
+  CONSTRAINT `fk_QUESTION_COMMENTS_QUESTIONS`
+    FOREIGN KEY (`id_question`)
+    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_QUESTION_COMMENTS_USERS`
+    FOREIGN KEY (`id_user`)
+    REFERENCES `poplitic_db`.`USERS` (`id_user`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_QUESTION_COMMENTS_PARENT`
+    FOREIGN KEY (`id_parent_comment`)
+    REFERENCES `poplitic_db`.`QUESTION_COMMENTS` (`id_comment`)
+    ON DELETE SET NULL
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `fk_QUESTION_COMMENTS_QUESTIONS_idx` ON `poplitic_db`.`QUESTION_COMMENTS` (`id_question` ASC) ;
+CREATE INDEX `fk_QUESTION_COMMENTS_USERS_idx` ON `poplitic_db`.`QUESTION_COMMENTS` (`id_user` ASC) ;
+CREATE INDEX `fk_QUESTION_COMMENTS_PARENT_idx` ON `poplitic_db`.`QUESTION_COMMENTS` (`id_parent_comment` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`QUESTION_MEETINGS`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`QUESTION_MEETINGS` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTION_MEETINGS` (
+  `id_meeting` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_question` INT(11) NOT NULL,
+  `id_user` INT(11) NOT NULL,
+  `type_meeting` VARCHAR(20) NOT NULL,
+  `titre` VARCHAR(255) NULL,
+  `description` TEXT NULL,
+  `lieu` VARCHAR(255) NULL,
+  `url` TEXT NULL,
+  `date_debut` DATETIME NULL,
+  `date_fin` DATETIME NULL,
+  `date_creation` DATETIME NULL,
+  `date_modification` DATETIME NULL,
+  PRIMARY KEY (`id_meeting`),
+  CONSTRAINT `fk_QUESTION_MEETINGS_QUESTIONS`
+    FOREIGN KEY (`id_question`)
+    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_QUESTION_MEETINGS_USERS`
+    FOREIGN KEY (`id_user`)
+    REFERENCES `poplitic_db`.`USERS` (`id_user`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `fk_QUESTION_MEETINGS_QUESTIONS_idx` ON `poplitic_db`.`QUESTION_MEETINGS` (`id_question` ASC) ;
+CREATE INDEX `fk_QUESTION_MEETINGS_USERS_idx` ON `poplitic_db`.`QUESTION_MEETINGS` (`id_user` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`BUDGETS`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`BUDGETS` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGETS` (
+  `id_budget` INT(11) NOT NULL AUTO_INCREMENT,
+  `niveau` VARCHAR(20) NOT NULL,
+  `code_territoire` VARCHAR(45) NOT NULL,
+  `libelle_territoire` VARCHAR(255) NULL,
+  `annee` INT NULL,
+  `montant_total` DECIMAL(15,2) NULL,
+  `date_creation` DATETIME NULL,
+  `date_modification` DATETIME NULL,
+  PRIMARY KEY (`id_budget`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `idx_BUDGETS_TERRITOIRE` ON `poplitic_db`.`BUDGETS` (`niveau` ASC, `code_territoire` ASC, `annee` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`BUDGET_POSTES`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`BUDGET_POSTES` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGET_POSTES` (
+  `id_budget_poste` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_budget` INT(11) NOT NULL,
+  `code` VARCHAR(45) NULL,
+  `libelle` VARCHAR(255) NULL,
+  `description` TEXT NULL,
+  `montant_actuel` DECIMAL(15,2) NULL,
+  PRIMARY KEY (`id_budget_poste`),
+  CONSTRAINT `fk_BUDGET_POSTES_BUDGETS`
+    FOREIGN KEY (`id_budget`)
+    REFERENCES `poplitic_db`.`BUDGETS` (`id_budget`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `fk_BUDGET_POSTES_BUDGETS_idx` ON `poplitic_db`.`BUDGET_POSTES` (`id_budget` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`BUDGET_IMPACTS`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`BUDGET_IMPACTS` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGET_IMPACTS` (
+  `id_budget_impact` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_budget_poste` INT(11) NOT NULL,
+  `sens` VARCHAR(20) NOT NULL,
+  `libelle` VARCHAR(255) NULL,
+  `description` TEXT NULL,
+  `seuil_pourcentage` DECIMAL(7,2) NULL,
+  PRIMARY KEY (`id_budget_impact`),
+  CONSTRAINT `fk_BUDGET_IMPACTS_BUDGET_POSTES`
+    FOREIGN KEY (`id_budget_poste`)
+    REFERENCES `poplitic_db`.`BUDGET_POSTES` (`id_budget_poste`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `fk_BUDGET_IMPACTS_BUDGET_POSTES_idx` ON `poplitic_db`.`BUDGET_IMPACTS` (`id_budget_poste` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`BUDGET_CHOIX`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`BUDGET_CHOIX` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGET_CHOIX` (
+  `id_budget_choix` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_budget` INT(11) NOT NULL,
+  `id_user` INT(11) NOT NULL,
+  `date_creation` DATETIME NULL,
+  `date_modification` DATETIME NULL,
+  PRIMARY KEY (`id_budget_choix`),
+  CONSTRAINT `fk_BUDGET_CHOIX_BUDGETS`
+    FOREIGN KEY (`id_budget`)
+    REFERENCES `poplitic_db`.`BUDGETS` (`id_budget`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_BUDGET_CHOIX_USERS`
+    FOREIGN KEY (`id_user`)
+    REFERENCES `poplitic_db`.`USERS` (`id_user`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE UNIQUE INDEX `idx_BUDGET_CHOIX_USER` ON `poplitic_db`.`BUDGET_CHOIX` (`id_budget` ASC, `id_user` ASC) ;
+CREATE INDEX `fk_BUDGET_CHOIX_USERS_idx` ON `poplitic_db`.`BUDGET_CHOIX` (`id_user` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`BUDGET_CHOIX_POSTES`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`BUDGET_CHOIX_POSTES` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGET_CHOIX_POSTES` (
+  `id_budget_choix_poste` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_budget_choix` INT(11) NOT NULL,
+  `id_budget_poste` INT(11) NOT NULL,
+  `montant` DECIMAL(15,2) NULL,
+  PRIMARY KEY (`id_budget_choix_poste`),
+  CONSTRAINT `fk_BUDGET_CHOIX_POSTES_BUDGET_CHOIX`
+    FOREIGN KEY (`id_budget_choix`)
+    REFERENCES `poplitic_db`.`BUDGET_CHOIX` (`id_budget_choix`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_BUDGET_CHOIX_POSTES_BUDGET_POSTES`
+    FOREIGN KEY (`id_budget_poste`)
+    REFERENCES `poplitic_db`.`BUDGET_POSTES` (`id_budget_poste`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `fk_BUDGET_CHOIX_POSTES_BUDGET_CHOIX_idx` ON `poplitic_db`.`BUDGET_CHOIX_POSTES` (`id_budget_choix` ASC) ;
+CREATE INDEX `fk_BUDGET_CHOIX_POSTES_BUDGET_POSTES_idx` ON `poplitic_db`.`BUDGET_CHOIX_POSTES` (`id_budget_poste` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`ACTUALITES`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`ACTUALITES` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`ACTUALITES` (
+  `id_actualite` INT(11) NOT NULL AUTO_INCREMENT,
+  `source` VARCHAR(255) NULL,
+  `titre` VARCHAR(255) NOT NULL,
+  `resume` TEXT NULL,
+  `url` TEXT NULL,
+  `date_publication` DATETIME NULL,
+  `date_creation` DATETIME NULL,
+  PRIMARY KEY (`id_actualite`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `idx_ACTUALITES_DATE_PUBLICATION` ON `poplitic_db`.`ACTUALITES` (`date_publication` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`QUESTION_SUGGESTIONS`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`QUESTION_SUGGESTIONS` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTION_SUGGESTIONS` (
+  `id_question_suggestion` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_actualite` INT(11) NOT NULL,
+  `id_question` INT(11) NULL,
+  `statut` VARCHAR(45) NULL,
+  `titre` VARCHAR(255) NULL,
+  `description` TEXT NULL,
+  `date_creation` DATETIME NULL,
+  `date_modification` DATETIME NULL,
+  PRIMARY KEY (`id_question_suggestion`),
+  CONSTRAINT `fk_QUESTION_SUGGESTIONS_ACTUALITES`
+    FOREIGN KEY (`id_actualite`)
+    REFERENCES `poplitic_db`.`ACTUALITES` (`id_actualite`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_QUESTION_SUGGESTIONS_QUESTIONS`
+    FOREIGN KEY (`id_question`)
+    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `fk_QUESTION_SUGGESTIONS_ACTUALITES_idx` ON `poplitic_db`.`QUESTION_SUGGESTIONS` (`id_actualite` ASC) ;
+CREATE INDEX `fk_QUESTION_SUGGESTIONS_QUESTIONS_idx` ON `poplitic_db`.`QUESTION_SUGGESTIONS` (`id_question` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`LOIS`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`LOIS` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`LOIS` (
+  `id_loi` INT(11) NOT NULL AUTO_INCREMENT,
+  `code` VARCHAR(45) NULL,
+  `titre` VARCHAR(255) NULL,
+  `contenu` TEXT NULL,
+  `source` VARCHAR(255) NULL,
+  `date_publication` DATETIME NULL,
+  `date_creation` DATETIME NULL,
+  `date_modification` DATETIME NULL,
+  PRIMARY KEY (`id_loi`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `idx_LOIS_CODE` ON `poplitic_db`.`LOIS` (`code` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`LOI_INCOHERENCES`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`LOI_INCOHERENCES` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`LOI_INCOHERENCES` (
+  `id_loi_incoherence` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_loi` INT(11) NOT NULL,
+  `id_loi_reference` INT(11) NOT NULL,
+  `description` TEXT NULL,
+  `correction_proposee` TEXT NULL,
+  `statut` VARCHAR(45) NULL,
+  `date_creation` DATETIME NULL,
+  `date_modification` DATETIME NULL,
+  PRIMARY KEY (`id_loi_incoherence`),
+  CONSTRAINT `fk_LOI_INCOHERENCES_LOIS`
+    FOREIGN KEY (`id_loi`)
+    REFERENCES `poplitic_db`.`LOIS` (`id_loi`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_LOI_INCOHERENCES_LOIS_REF`
+    FOREIGN KEY (`id_loi_reference`)
+    REFERENCES `poplitic_db`.`LOIS` (`id_loi`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `fk_LOI_INCOHERENCES_LOIS_idx` ON `poplitic_db`.`LOI_INCOHERENCES` (`id_loi` ASC) ;
+CREATE INDEX `fk_LOI_INCOHERENCES_LOIS_REF_idx` ON `poplitic_db`.`LOI_INCOHERENCES` (`id_loi_reference` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `poplitic_db`.`PROPOSITIONS_LOI`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `poplitic_db`.`PROPOSITIONS_LOI` ;
+
+CREATE TABLE IF NOT EXISTS `poplitic_db`.`PROPOSITIONS_LOI` (
+  `id_proposition_loi` INT(11) NOT NULL AUTO_INCREMENT,
+  `id_question` INT(11) NOT NULL,
+  `id_user` INT(11) NOT NULL,
+  `titre` VARCHAR(255) NULL,
+  `expose_motifs` TEXT NULL,
+  `dispositif` TEXT NULL,
+  `analyse_conformite` TEXT NULL,
+  `statut` VARCHAR(45) NULL,
+  `date_creation` DATETIME NULL,
+  `date_modification` DATETIME NULL,
+  PRIMARY KEY (`id_proposition_loi`),
+  CONSTRAINT `fk_PROPOSITIONS_LOI_QUESTIONS`
+    FOREIGN KEY (`id_question`)
+    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_PROPOSITIONS_LOI_USERS`
+    FOREIGN KEY (`id_user`)
+    REFERENCES `poplitic_db`.`USERS` (`id_user`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE INDEX `fk_PROPOSITIONS_LOI_QUESTIONS_idx` ON `poplitic_db`.`PROPOSITIONS_LOI` (`id_question` ASC) ;
+CREATE INDEX `fk_PROPOSITIONS_LOI_USERS_idx` ON `poplitic_db`.`PROPOSITIONS_LOI` (`id_user` ASC) ;
+
 USE `poplitic_db`;
 
 DELIMITER $$
