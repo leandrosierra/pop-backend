@@ -22,7 +22,7 @@ const proxyHttp = (clientRequest, clientResponse) => {
     ...clientRequest.headers,
     host: `${target.host}:${target.port}`,
     "x-forwarded-host": clientRequest.headers.host || "",
-    "x-forwarded-proto": "https"
+    "x-forwarded-proto": "http"
   };
 
   const upstream = http.request(
@@ -71,5 +71,5 @@ const proxyUpgrade = (request, socket, head) => {
 const server = http.createServer(proxyHttp);
 server.on("upgrade", proxyUpgrade);
 server.listen(proxyPort, "127.0.0.1", () => {
-  process.stdout.write(`POP Cloudflare proxy listening on http://127.0.0.1:${proxyPort}\n`);
+  process.stdout.write(`POP local proxy listening on http://127.0.0.1:${proxyPort}\n`);
 });

@@ -1,6 +1,5 @@
 package com.lsi.server.security;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,7 +16,19 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-  private static final List<String> LOCAL_ORIGINS = Arrays.asList("http://localhost:8082", "http://127.0.0.1:8082");
+  private static final List<String> LOCAL_ORIGINS = Arrays.asList(
+      "http://localhost:8082",
+      "http://127.0.0.1:8082",
+      "http://localhost:8090",
+      "http://127.0.0.1:8090",
+      "http://localhost:8182",
+      "http://127.0.0.1:8182",
+      "http://localhost:8190",
+      "http://127.0.0.1:8190",
+      "http://localhost:8282",
+      "http://127.0.0.1:8282",
+      "http://localhost:8290",
+      "http://127.0.0.1:8290");
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
@@ -52,13 +63,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   }
 
   private boolean isAllowedOrigin(String origin) {
-    if (LOCAL_ORIGINS.contains(origin)) {
-      return true;
-    }
-    if (origin == null) {
-      return false;
-    }
-    URI uri = URI.create(origin);
-    return "https".equals(uri.getScheme()) && uri.getHost() != null && uri.getHost().endsWith(".trycloudflare.com");
+    return LOCAL_ORIGINS.contains(origin);
   }
 }

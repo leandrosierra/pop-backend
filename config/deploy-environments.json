@@ -1,0 +1,25 @@
+{
+  "environments": {
+    "dev": {
+      "label": "DEV",
+      "backendPort": 8080,
+      "frontendPort": 8082,
+      "proxyPort": 8090,
+      "promoteTo": "uat"
+    },
+    "uat": {
+      "label": "UAT",
+      "backendPort": 8180,
+      "frontendPort": 8182,
+      "proxyPort": 8190,
+      "promoteTo": "prod"
+    },
+    "prod": {
+      "label": "PROD",
+      "backendPort": 8280,
+      "frontendPort": 8282,
+      "proxyPort": 8290,
+      "promoteTo": null
+    }
+  }
+}
