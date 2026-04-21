@@ -27,6 +27,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       "http://127.0.0.1:8082",
       "http://localhost:8090",
       "http://127.0.0.1:8090",
+      "http://localhost:8097",
+      "http://127.0.0.1:8097",
       "http://localhost:8182",
       "http://127.0.0.1:8182",
       "http://localhost:8190",
