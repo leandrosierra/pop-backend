@@ -53,7 +53,8 @@ public class QuestionsController {
 
     @GetMapping("/feed")
     public Page<Question> getFeed(@PageableDefault(size = 10) Pageable pageable) {
-        return questionsRepository.findQuestionsByStatutCode("ACTIF", pageable);
+        long userId = SecurityUtils.currentPrincipal().getUserId();
+        return questionsRepository.findFeedQuestions("ACTIF", userId, pageable);
     }
 
     @PostMapping("/create")

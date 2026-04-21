@@ -14,5 +14,11 @@ public interface QuestionsRepository extends JpaRepository<Question, Long> {
 
 	@Query("SELECT q FROM Question q where q.statut.code = :code")
 	Page<Question> findQuestionsByStatutCode(@Param("code") String code, Pageable pageable);
+
+	@Query("SELECT q FROM Question q WHERE q.statut.code = :code "
+			+ "AND (q.user IS NULL OR q.user.id <> :userId) "
+			+ "AND NOT EXISTS (SELECT s.idStat FROM Stat s WHERE s.question.id = q.id AND s.user.id = :userId) "
+			+ "ORDER BY q.dateCreation DESC, q.id DESC")
+	Page<Question> findFeedQuestions(@Param("code") String code, @Param("userId") Long userId, Pageable pageable);
 	
 }
