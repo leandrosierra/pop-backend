@@ -1,8 +1,13 @@
 package com.lsi.server.controller;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.UUID;
 
 import javax.validation.Valid;
 
@@ -29,6 +34,9 @@ import com.lsi.server.model.User;
 import com.lsi.server.repository.RoleRepository;
 import com.lsi.server.repository.UserRepository;
 import com.lsi.server.security.ApiPrincipal;
+import com.lsi.server.security.OAuthIdentity;
+import com.lsi.server.security.OAuthIdentityService;
+import com.lsi.server.security.OAuthLoginRequest;
 import com.lsi.server.security.SecurityUtils;
 import com.lsi.server.security.TokenService;
 
@@ -47,6 +55,9 @@ public class UserController {
 
     @Autowired
     TokenService tokenService;
+
+    @Autowired
+    OAuthIdentityService oauthIdentityService;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -131,9 +142,16 @@ public class UserController {
         if(!user.isActif() || !matchesPassword(userToLog.getPassword(), user)) {
             throw new SecurityException("Unauthorized");
         }
-        String role = user.getRole() != null && user.getRole().getCode() != null ? user.getRole().getCode() : "USER";
-        String token = tokenService.createToken(user.getId(), role);
-    	return new LoginResponse(token, token, user);
+        return createLoginResponse(user);
+    }
+
+    @PostMapping("/oauth/login")
+    public LoginResponse oauthLogin(@Valid @RequestBody OAuthLoginRequest request) {
+        User user = loadOrCreateOAuthUser(oauthIdentityService.verify(request));
+        if (!user.isActif()) {
+            throw new SecurityException("Unauthorized");
+        }
+        return createLoginResponse(user);
     }
 
     @PutMapping("/update")
@@ -180,6 +198,93 @@ public class UserController {
         ApiPrincipal principal = SecurityUtils.currentPrincipal();
         return userRepository.findById(principal.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", principal.getUserId()));
+    }
+
+    private User loadOrCreateOAuthUser(OAuthIdentity identity) {
+        String login = oauthLogin(identity);
+        return userRepository.findUserByLogin(login)
+                .orElseGet(() -> findExistingEmailUser(identity)
+                        .orElseGet(() -> createOAuthUser(identity, login)));
+    }
+
+    private Optional<User> findExistingEmailUser(OAuthIdentity identity) {
+        String email = normalizeEmail(identity.getEmail());
+        if (email == null || !identity.isEmailVerified()) {
+            return Optional.empty();
+        }
+        return userRepository.findUserByEmail(email);
+    }
+
+    private User createOAuthUser(OAuthIdentity identity, String login) {
+        Role userRole = roleRepository.findRoleByCode("USER")
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "code", "USER"));
+        User user = new User();
+        user.setLogin(login);
+        user.setNom(limit(nameFor(identity), 45));
+        user.setPrenom(limit(identity.getFirstName(), 45));
+        user.setEmail(emailFor(identity, login));
+        user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+        user.setRole(userRole);
+        user.setActif(true);
+        return userRepository.save(user);
+    }
+
+    private LoginResponse createLoginResponse(User user) {
+        String role = user.getRole() != null && user.getRole().getCode() != null ? user.getRole().getCode() : "USER";
+        String token = tokenService.createToken(user.getId(), role);
+        return new LoginResponse(token, token, user);
+    }
+
+    private String oauthLogin(OAuthIdentity identity) {
+        return identity.getProvider() + ":" + sha256(identity.getSubject()).substring(0, 32);
+    }
+
+    private String emailFor(OAuthIdentity identity, String login) {
+        String email = identity.isEmailVerified() ? normalizeEmail(identity.getEmail()) : null;
+        return email == null ? login + "@oauth.pop.local" : email;
+    }
+
+    private String nameFor(OAuthIdentity identity) {
+        String lastName = normalizeText(identity.getLastName());
+        if (lastName != null) {
+            return lastName;
+        }
+        String displayName = normalizeText(identity.getDisplayName());
+        return displayName == null ? identity.getProvider() : displayName;
+    }
+
+    private String normalizeEmail(String email) {
+        String value = normalizeText(email);
+        return value == null ? null : value.toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String limit(String value, int maxLength) {
+        String normalized = normalizeText(value);
+        if (normalized == null) {
+            return "";
+        }
+        return normalized.length() <= maxLength ? normalized : normalized.substring(0, maxLength);
+    }
+
+    private String sha256(String value) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte item : digest) {
+                hex.append(String.format("%02x", item));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 
     private String readLanguageCode(User user) {

@@ -152,6 +152,15 @@ function Ensure-TokenSecret {
   return $secret
 }
 
+function Set-EnvFromUserIfDefined([string[]]$Names) {
+  foreach ($name in $Names) {
+    $value = [Environment]::GetEnvironmentVariable($name, 'User')
+    if (![string]::IsNullOrWhiteSpace($value)) {
+      Set-Item -Path "Env:$name" -Value $value
+    }
+  }
+}
+
 function Ensure-MariaDb {
   if (Test-Listening 3306) { return }
   $mariaBase = Join-Path $env:USERPROFILE '.codex\tools\mariadb-10.11.16-winx64'
@@ -205,6 +214,14 @@ function Set-BackendEnvironment($EnvConfig) {
   $env:POP_TOKEN_SECRET = Ensure-TokenSecret
   $ttl = [Environment]::GetEnvironmentVariable('POP_TOKEN_TTL_SECONDS', 'User')
   $env:POP_TOKEN_TTL_SECONDS = if ([string]::IsNullOrWhiteSpace($ttl)) { '86400' } else { $ttl }
+  Set-EnvFromUserIfDefined @(
+    'POP_GOOGLE_OAUTH_CLIENT_IDS',
+    'POP_APPLE_OAUTH_CLIENT_IDS',
+    'POP_FACEBOOK_APP_ID',
+    'POP_FACEBOOK_APP_SECRET',
+    'POP_INSTAGRAM_APP_ID',
+    'POP_INSTAGRAM_APP_SECRET'
+  )
 }
 
 function Start-Backend($EnvConfig) {
@@ -231,6 +248,22 @@ function Start-Frontend($EnvConfig) {
   New-Item -ItemType Directory -Force -Path $logs | Out-Null
   $env:EXPO_PUBLIC_POP_API_ORIGIN = $EnvConfig.ApiOrigin
   $env:EXPO_PUBLIC_POP_ENV_LABEL = $EnvConfig.Label
+  Set-EnvFromUserIfDefined @(
+    'EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID',
+    'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID',
+    'EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID',
+    'EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID',
+    'EXPO_PUBLIC_APPLE_OAUTH_CLIENT_ID',
+    'EXPO_PUBLIC_APPLE_SERVICE_ID',
+    'EXPO_PUBLIC_FACEBOOK_OAUTH_CLIENT_ID',
+    'EXPO_PUBLIC_FACEBOOK_APP_ID',
+    'EXPO_PUBLIC_INSTAGRAM_OAUTH_CLIENT_ID',
+    'EXPO_PUBLIC_INSTAGRAM_APP_ID'
+  )
+  $envTemp = Join-Path $RuntimeRoot "$($EnvConfig.Key)\temp"
+  New-Item -ItemType Directory -Force -Path $envTemp | Out-Null
+  $env:TEMP = $envTemp
+  $env:TMP = $envTemp
   Step "$($EnvConfig.Label) front -> $($EnvConfig.FrontendPort)"
   Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'web', '--', '--clear', '--port', "$($EnvConfig.FrontendPort)", '--host', 'localhost') -WorkingDirectory $FrontendRoot -RedirectStandardOutput (Join-Path $logs 'frontend.out.log') -RedirectStandardError (Join-Path $logs 'frontend.err.log') -WindowStyle Hidden | Out-Null
   Wait-Port $EnvConfig.FrontendPort $HealthcheckTimeoutSec
