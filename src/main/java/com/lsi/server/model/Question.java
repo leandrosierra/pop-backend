@@ -33,7 +33,7 @@ public class Question {
 	@JoinColumn(name="id_statut")
 	private Statut statut;
 	
-	@OneToMany(targetEntity=QuestionChoixGeo.class, mappedBy="id")
+	@OneToMany(targetEntity=QuestionChoixGeo.class, mappedBy="question")
 	private List<QuestionChoixGeo> choixGeo = new ArrayList<>();
 	
 	private String code;

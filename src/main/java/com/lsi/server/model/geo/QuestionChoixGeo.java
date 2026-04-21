@@ -10,8 +10,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lsi.server.model.Question;
-import com.lsi.server.model.UserAdresse;
 
 @Entity
 @Table(name="QUESTION_CHOIX_GEO")
@@ -24,6 +24,7 @@ public class QuestionChoixGeo  {
 	
 	@ManyToOne
 	@JoinColumn(name="id_question")
+	@JsonIgnore
 	private Question question;
 	
 	@ManyToOne(cascade = CascadeType.MERGE)

@@ -513,7 +513,7 @@ USE `poplitic_db`$$
 DROP TRIGGER IF EXISTS `poplitic_db`.`USERS_BEFORE_INSERT` $$
 USE `poplitic_db`$$
 CREATE
-DEFINER=`poplitic_admin`@`%`
+DEFINER = CURRENT_USER
 TRIGGER `poplitic_db`.`USERS_BEFORE_INSERT`
 BEFORE INSERT ON `poplitic_db`.`USERS`
 FOR EACH ROW
@@ -527,7 +527,6 @@ BEGIN
     SET NEW.id_position = LAST_INSERT_id();
     
     SET NEW.date_creation = NOW();
-    SET NEW.password = PASSWORD(NEW.password);
 END$$
 
 
@@ -535,7 +534,7 @@ USE `poplitic_db`$$
 DROP TRIGGER IF EXISTS `poplitic_db`.`USERS_AFTER_INSERT` $$
 USE `poplitic_db`$$
 CREATE
-DEFINER=`poplitic_admin`@`%`
+DEFINER = CURRENT_USER
 TRIGGER `poplitic_db`.`USERS_AFTER_INSERT`
 AFTER INSERT ON `poplitic_db`.`USERS`
 FOR EACH ROW
@@ -548,7 +547,7 @@ USE `poplitic_db`$$
 DROP TRIGGER IF EXISTS `poplitic_db`.`USERS_BEFORE_UPDATE` $$
 USE `poplitic_db`$$
 CREATE
-DEFINER=`poplitic_admin`@`%`
+DEFINER = CURRENT_USER
 TRIGGER `poplitic_db`.`USERS_BEFORE_UPDATE`
 BEFORE UPDATE ON `poplitic_db`.`USERS`
 FOR EACH ROW
@@ -561,7 +560,7 @@ USE `poplitic_db`$$
 DROP TRIGGER IF EXISTS `poplitic_db`.`QUESTIONS_BEFORE_INSERT` $$
 USE `poplitic_db`$$
 CREATE
-DEFINER=`poplitic_admin`@`%`
+DEFINER = CURRENT_USER
 TRIGGER `poplitic_db`.`QUESTIONS_BEFORE_INSERT`
 BEFORE INSERT ON `poplitic_db`.`QUESTIONS`
 FOR EACH ROW
@@ -574,7 +573,7 @@ USE `poplitic_db`$$
 DROP TRIGGER IF EXISTS `poplitic_db`.`QUESTIONS_BEFORE_UPDATE` $$
 USE `poplitic_db`$$
 CREATE
-DEFINER=`poplitic_admin`@`%`
+DEFINER = CURRENT_USER
 TRIGGER `poplitic_db`.`QUESTIONS_BEFORE_UPDATE`
 BEFORE UPDATE ON `poplitic_db`.`QUESTIONS`
 FOR EACH ROW
