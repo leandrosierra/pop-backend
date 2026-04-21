@@ -136,6 +136,22 @@ function Resolve-JavaHome {
   return $javaHome
 }
 
+function Ensure-TokenSecret {
+  $secret = [Environment]::GetEnvironmentVariable('POP_TOKEN_SECRET', 'User')
+  if ([string]::IsNullOrWhiteSpace($secret) -or $secret.Length -lt 32) {
+    $rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+      $bytes = New-Object byte[] 48
+      $rng.GetBytes($bytes)
+      $secret = [Convert]::ToBase64String($bytes)
+      [Environment]::SetEnvironmentVariable('POP_TOKEN_SECRET', $secret, 'User')
+    } finally {
+      $rng.Dispose()
+    }
+  }
+  return $secret
+}
+
 function Ensure-MariaDb {
   if (Test-Listening 3306) { return }
   $mariaBase = Join-Path $env:USERPROFILE '.codex\tools\mariadb-10.11.16-winx64'
@@ -186,8 +202,9 @@ function Set-BackendEnvironment($EnvConfig) {
   $env:POP_DB_URL = [Environment]::GetEnvironmentVariable('POP_DB_URL', 'User')
   $env:POP_DB_USERNAME = [Environment]::GetEnvironmentVariable('POP_DB_USERNAME', 'User')
   $env:POP_DB_PASSWORD = [Environment]::GetEnvironmentVariable('POP_DB_PASSWORD', 'User')
-  $env:POP_SECURITY_USER = [Environment]::GetEnvironmentVariable('POP_SECURITY_USER', 'User')
-  $env:POP_SECURITY_PASSWORD = [Environment]::GetEnvironmentVariable('POP_SECURITY_PASSWORD', 'User')
+  $env:POP_TOKEN_SECRET = Ensure-TokenSecret
+  $ttl = [Environment]::GetEnvironmentVariable('POP_TOKEN_TTL_SECONDS', 'User')
+  $env:POP_TOKEN_TTL_SECONDS = if ([string]::IsNullOrWhiteSpace($ttl)) { '86400' } else { $ttl }
 }
 
 function Start-Backend($EnvConfig) {
@@ -214,7 +231,6 @@ function Start-Frontend($EnvConfig) {
   New-Item -ItemType Directory -Force -Path $logs | Out-Null
   $env:EXPO_PUBLIC_POP_API_ORIGIN = $EnvConfig.ApiOrigin
   $env:EXPO_PUBLIC_POP_API_MODE = 'legacy'
-  $env:EXPO_PUBLIC_POP_API_BASIC_AUTH = 'user:password'
   $env:EXPO_PUBLIC_POP_ENV_LABEL = $EnvConfig.Label
   Step "$($EnvConfig.Label) front -> $($EnvConfig.FrontendPort)"
   Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'web', '--', '--port', "$($EnvConfig.FrontendPort)", '--host', 'localhost') -WorkingDirectory $FrontendRoot -RedirectStandardOutput (Join-Path $logs 'frontend.out.log') -RedirectStandardError (Join-Path $logs 'frontend.err.log') -WindowStyle Hidden | Out-Null
@@ -302,7 +318,9 @@ function Seed-Database {
   $user = [Environment]::GetEnvironmentVariable('POP_DB_USERNAME', 'User')
   $pwd = [Environment]::GetEnvironmentVariable('POP_DB_PASSWORD', 'User')
   Step 'Seed base locale'
-  & $mysql -h 127.0.0.1 -P 3306 -u $user "--password=$pwd" --database poplitic_db --execute "SOURCE SQL/LOCAL_DEV_SEED.sql; SOURCE SQL/LOCAL_LIVE_SEED.sql"
+  & $mysql -h 127.0.0.1 -P 3306 -u $user "--password=$pwd" --database poplitic_db --execute "SOURCE SQL/LOCAL_DEV_SEED.sql"
+  if ($LASTEXITCODE -ne 0) { throw 'Seed SQL echoue.' }
+  & $mysql -h 127.0.0.1 -P 3306 -u $user "--password=$pwd" --database poplitic_db --execute "SOURCE SQL/LOCAL_LIVE_SEED.sql"
   if ($LASTEXITCODE -ne 0) { throw 'Seed SQL echoue.' }
 }
 

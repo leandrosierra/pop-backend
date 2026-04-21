@@ -18,10 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.lsi.server.exception.ResourceNotFoundException;
 import com.lsi.server.model.Question;
+import com.lsi.server.model.Statut;
 import com.lsi.server.model.geo.QuestionChoixGeo;
 import com.lsi.server.repository.QuestionsChoixGeoRepository;
 import com.lsi.server.repository.QuestionsRepository;
+import com.lsi.server.repository.StatutRepository;
 import com.lsi.server.repository.UserRepository;
+import com.lsi.server.security.ApiPrincipal;
+import com.lsi.server.security.SecurityUtils;
 
 @RestController
 @RequestMapping("/question")
@@ -34,31 +38,59 @@ public class QuestionsController {
     UserRepository userRepository;
 
     @Autowired
+    StatutRepository statutRepository;
+
+    @Autowired
     QuestionsChoixGeoRepository qChoixGeoRepository;
     
     @GetMapping("/all")
     public List<Question> getAll() {
+        SecurityUtils.requireAdmin();
         return questionsRepository.findAll();
+    }
+
+    @GetMapping("/feed")
+    public List<Question> getFeed() {
+        return questionsRepository.findQuestionsByStatutCode("ACTIF");
     }
 
     @PostMapping("/create")
     public Question create(@Valid @RequestBody Question question) {
+        long userId = SecurityUtils.currentPrincipal().getUserId();
+        Statut draftStatus = statutRepository.findStatutByCode("BROUILLON")
+                .orElseThrow(() -> new ResourceNotFoundException("Statut", "code", "BROUILLON"));
+        question.setId(0);
+        question.setUser(userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId)));
+        question.setStatut(draftStatus);
         return questionsRepository.save(question);
     }
     
     @PostMapping("/geo/create")
     public QuestionChoixGeo createchoixGeo(@Valid @RequestBody QuestionChoixGeo choixGeo) {
+        SecurityUtils.requireAdmin();
         return qChoixGeoRepository.save(choixGeo);
     }
 
     @GetMapping("/{id}")
     public Question getQuestionById(@PathVariable(value = "id") Long questionId) {
-    	return questionsRepository.findById(questionId)
+    	Question question = questionsRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionId));
+        if (!canReadQuestion(question)) {
+            throw new SecurityException("Forbidden");
+        }
+        return question;
     }
     
+    @GetMapping("/user/current")
+    public List<Question> getCurrentUserQuestions() {
+        long userId = SecurityUtils.currentPrincipal().getUserId();
+    	return userRepository.findQuestionByUser(userId);
+    }
+
     @PostMapping("/user/{id}")
     public List<Question> getQuestionsByUser(@PathVariable(value = "id") Long userId) {
+        SecurityUtils.requireCurrentUserOrAdmin(userId);
     	List<Question> questions = userRepository.findQuestionByUser(userId);
     	if(questions==null) throw new ResourceNotFoundException("Questions", "id", userId);
     	return questions;
@@ -66,6 +98,7 @@ public class QuestionsController {
 
     @PutMapping("/update")
     public Question update(@Valid @RequestBody Question questionDetails) {
+        SecurityUtils.requireAdmin();
     	Question question = questionsRepository.findById(questionDetails.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionDetails.getId()));
         
@@ -82,9 +115,21 @@ public class QuestionsController {
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable(value = "id") Long questionId) {
+        SecurityUtils.requireAdmin();
     	Question question = questionsRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionId));
         questionsRepository.delete(question);
         return ResponseEntity.ok().build();
+    }
+
+    private boolean canReadQuestion(Question question) {
+        ApiPrincipal principal = SecurityUtils.currentPrincipal();
+        if (principal.isAdmin()) {
+            return true;
+        }
+        if (question.getUser() != null && question.getUser().getId() == principal.getUserId()) {
+            return true;
+        }
+        return question.getStatut() != null && "ACTIF".equals(question.getStatut().getCode());
     }
 }

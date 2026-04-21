@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +12,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+
+import com.lsi.server.repository.UserRepository;
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -30,20 +36,40 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       "http://localhost:8290",
       "http://127.0.0.1:8290");
 
+  private final TokenService tokenService;
+  private final UserRepository userRepository;
+
+  public SecurityConfig(TokenService tokenService, UserRepository userRepository) {
+    this.tokenService = tokenService;
+    this.userRepository = userRepository;
+  }
+
   @Override
   protected void configure(HttpSecurity http) throws Exception {
+    http.cors().and().csrf().disable();
+    http.headers().frameOptions().deny();
     http
-      .cors().and()
-      .csrf().disable()
+      .exceptionHandling()
+        .authenticationEntryPoint((request, response, exception) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+        .accessDeniedHandler((request, response, exception) -> response.sendError(HttpServletResponse.SC_FORBIDDEN))
+        .and()
       .authorizeRequests()
-        .antMatchers(HttpMethod.POST, "/user/**").authenticated()
-        .antMatchers(HttpMethod.PUT, "/user/**").authenticated()
-        .antMatchers(HttpMethod.DELETE, "/user/**").authenticated()
-        .antMatchers(HttpMethod.GET, "/user/**").authenticated()
+        .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+        .antMatchers(HttpMethod.GET, "/").permitAll()
+        .antMatchers(HttpMethod.POST, "/user/login").permitAll()
+        .antMatchers(HttpMethod.POST, "/user/create").permitAll()
+        .antMatchers("/user/**", "/question/**", "/stat/**").authenticated()
         .anyRequest().permitAll()
         .and()
-      .httpBasic().and()
-      .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+      .httpBasic().disable()
+      .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .and()
+      .addFilterBefore(new TokenAuthenticationFilter(tokenService, userRepository), UsernamePasswordAuthenticationFilter.class);
+  }
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder(12);
   }
 
   @Bean

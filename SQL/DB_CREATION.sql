@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS `poplitic_db`.`USERS` (
   `genre` VARCHAR(45) NULL DEFAULT NULL,
   `email` VARCHAR(255) NOT NULL,
   `numero_electeur` VARCHAR(45) NULL,
-  `password` VARCHAR(45) NOT NULL,
+  `password` VARCHAR(100) NOT NULL,
   `actif` TINYINT(4) NULL DEFAULT NULL,
   `date_creation` DATETIME NULL DEFAULT NULL,
   `date_modification` DATETIME NULL DEFAULT NULL,

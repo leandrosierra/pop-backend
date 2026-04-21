@@ -4,18 +4,23 @@ SET NAMES utf8mb4;
 
 SET @admin_role_id = (SELECT `id_role` FROM `ROLES` WHERE `code` = 'ADMIN' LIMIT 1);
 SET @user_role_id = (SELECT `id_role` FROM `ROLES` WHERE `code` = 'USER' LIMIT 1);
+SET @admin_password_hash = '$2a$12$B.L4NsQXNhBrCVRyAEq/Yu4k6InJcKrByQihTU9lYHiMtNKloD5hS';
+SET @user_password_hash = '$2a$12$ezNWmur7lKIVPok4XpBTo.ojgyV73kCiCYUTHfe7wLfnIGWso0QWu';
+SET @default_password_hash = '$2a$12$zFYMf2HGDbuXDp8dq6tplesCg9xq2DVTEEDqVS9yT8yf36Ctq.uIO';
+
+ALTER TABLE `USERS` MODIFY `password` VARCHAR(100) NOT NULL;
 
 INSERT IGNORE INTO `USERS` (`id_role`, `login`, `nom`, `prenom`, `genre`, `email`, `numero_electeur`, `password`, `actif`)
-VALUES (@admin_role_id, 'admin', 'Admin', 'Pop', 'N/A', 'admin@pop.local', 'POP-ADMIN-0001', 'admin', 1);
+VALUES (@admin_role_id, 'admin', 'Admin', 'Pop', 'N/A', 'admin@pop.local', 'POP-ADMIN-0001', @admin_password_hash, 1);
 
 INSERT IGNORE INTO `USERS` (`id_role`, `login`, `nom`, `prenom`, `genre`, `email`, `numero_electeur`, `password`, `actif`)
-VALUES (@user_role_id, 'user', 'User', 'Pop', 'N/A', 'user@pop.local', 'POP-USER-0001', 'user', 1);
+VALUES (@user_role_id, 'user', 'User', 'Pop', 'N/A', 'user@pop.local', 'POP-USER-0001', @user_password_hash, 1);
 
 UPDATE `USERS`
 SET `password` = CASE `login`
-    WHEN 'admin' THEN 'admin'
-    WHEN 'user' THEN 'user'
-    ELSE 'password'
+    WHEN 'admin' THEN @admin_password_hash
+    WHEN 'user' THEN @user_password_hash
+    ELSE @default_password_hash
 END
 WHERE `login` IN ('admin', 'user', 'l.sierra', 'g.andrieux');
 
@@ -228,11 +233,15 @@ WHERE q.`code` IN ('Q-LOCAL-001', 'Q-LOCAL-002', 'Q-LOCAL-003')
 
 INSERT IGNORE INTO `USERS` (`id_role`, `login`, `nom`, `prenom`, `genre`, `email`, `numero_electeur`, `password`, `actif`)
 VALUES
-  (@user_role_id, 'camille.martin', 'Martin', 'Camille', 'F', 'camille.martin@pop.local', 'POP-USER-0002', 'password', 1),
-  (@user_role_id, 'nora.benali', 'Benali', 'Nora', 'F', 'nora.benali@pop.local', 'POP-USER-0003', 'password', 1),
-  (@user_role_id, 'julien.moreau', 'Moreau', 'Julien', 'M', 'julien.moreau@pop.local', 'POP-USER-0004', 'password', 1),
-  (@user_role_id, 'samir.durand', 'Durand', 'Samir', 'M', 'samir.durand@pop.local', 'POP-USER-0005', 'password', 1),
-  (@admin_role_id, 'mod.pop', 'Moderateur', 'Pop', 'N/A', 'moderateur@pop.local', 'POP-ADMIN-0002', 'password', 1);
+  (@user_role_id, 'camille.martin', 'Martin', 'Camille', 'F', 'camille.martin@pop.local', 'POP-USER-0002', @default_password_hash, 1),
+  (@user_role_id, 'nora.benali', 'Benali', 'Nora', 'F', 'nora.benali@pop.local', 'POP-USER-0003', @default_password_hash, 1),
+  (@user_role_id, 'julien.moreau', 'Moreau', 'Julien', 'M', 'julien.moreau@pop.local', 'POP-USER-0004', @default_password_hash, 1),
+  (@user_role_id, 'samir.durand', 'Durand', 'Samir', 'M', 'samir.durand@pop.local', 'POP-USER-0005', @default_password_hash, 1),
+  (@admin_role_id, 'mod.pop', 'Moderateur', 'Pop', 'N/A', 'moderateur@pop.local', 'POP-ADMIN-0002', @default_password_hash, 1);
+
+UPDATE `USERS`
+SET `password` = @default_password_hash
+WHERE `login` IN ('camille.martin', 'nora.benali', 'julien.moreau', 'samir.durand', 'mod.pop');
 
 UPDATE `USER_POSITION` p
 JOIN `USERS` u ON u.`id_position` = p.`id_position`

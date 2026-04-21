@@ -4,8 +4,8 @@ INSERT INTO `poplitic_db`.`LANGUES_REF` (`code`,`libelle`) VALUES ("FR","França
 INSERT INTO `poplitic_db`.`ROLES` (`code`,`libelle`) VALUES ("ADMIN","Administrateur");
 INSERT INTO `poplitic_db`.`ROLES` (`code`,`libelle`) VALUES ("USER","Utilisateur");
 
-INSERT INTO `poplitic_db`.`USERS` (`id_role`,`login`,`nom`,`prenom`,`email`,`password`,`actif`) VALUES (1,"l.sierra","sierra","leandro","leandrosierra1@gmail.com","password",1);
-INSERT INTO `poplitic_db`.`USERS` (`id_role`,`login`,`nom`,`prenom`,`email`,`password`,`actif`) VALUES (1,"g.andrieux","andrieux","guillaume","andrieux.guillaume@gmail.com","password",1);
+INSERT INTO `poplitic_db`.`USERS` (`id_role`,`login`,`nom`,`prenom`,`email`,`password`,`actif`) VALUES (1,"l.sierra","sierra","leandro","leandrosierra1@gmail.com","$2a$12$zFYMf2HGDbuXDp8dq6tplesCg9xq2DVTEEDqVS9yT8yf36Ctq.uIO",1);
+INSERT INTO `poplitic_db`.`USERS` (`id_role`,`login`,`nom`,`prenom`,`email`,`password`,`actif`) VALUES (1,"g.andrieux","andrieux","guillaume","andrieux.guillaume@gmail.com","$2a$12$zFYMf2HGDbuXDp8dq6tplesCg9xq2DVTEEDqVS9yT8yf36Ctq.uIO",1);
 
 INSERT INTO `poplitic_db`.`USER_INTERETS_REF` (`code`,`libelle`) VALUES ("Ecologie","Ecologie");
 INSERT INTO `poplitic_db`.`USER_INTERETS_REF` (`code`,`libelle`) VALUES ("Education","Education");
@@ -129,4 +129,3 @@ INSERT INTO `poplitic_db`.`DEPT_REF` (`id_pays`,`code`,`libelle`) VALUES (1,"972
 INSERT INTO `poplitic_db`.`DEPT_REF` (`id_pays`,`code`,`libelle`) VALUES (1,"973","Guyane");
 INSERT INTO `poplitic_db`.`DEPT_REF` (`id_pays`,`code`,`libelle`) VALUES (1,"974","La Réunion");
 INSERT INTO `poplitic_db`.`DEPT_REF` (`id_pays`,`code`,`libelle`) VALUES (1,"976","Mayotte");
-

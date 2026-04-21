@@ -4,7 +4,12 @@ SET NAMES utf8mb4;
 
 SET @user_role_id = (SELECT `id_role` FROM `ROLES` WHERE `code` = 'USER' LIMIT 1);
 SET @active_status_id = (SELECT `id_statut` FROM `STATUT_REF` WHERE `code` = 'ACTIF' LIMIT 1);
+SET @draft_status_id = (SELECT `id_statut` FROM `STATUT_REF` WHERE `code` = 'BROUILLON' LIMIT 1);
+SET @idle_status_id = (SELECT `id_statut` FROM `STATUT_REF` WHERE `code` = 'INACTIF' LIMIT 1);
 SET @fr_pays_id = (SELECT `id_pays` FROM `PAYS_REF` WHERE `code` = 'FR' LIMIT 1);
+SET @user_password_hash = '$2a$12$ezNWmur7lKIVPok4XpBTo.ojgyV73kCiCYUTHfe7wLfnIGWso0QWu';
+
+ALTER TABLE `USERS` MODIFY `password` VARCHAR(100) NOT NULL;
 
 CREATE TEMPORARY TABLE `tmp_live_digits` (`n` INT NOT NULL PRIMARY KEY) ENGINE = MEMORY;
 INSERT INTO `tmp_live_digits` (`n`)
@@ -143,7 +148,7 @@ SELECT
   CASE MOD(u.`n`, 3) WHEN 0 THEN 'F' WHEN 1 THEN 'M' ELSE 'N/A' END,
   CONCAT('sim.user', LPAD(u.`n`, 3, '0'), '@pop.local'),
   CONCAT('POP-SIM-', LPAD(u.`n`, 4, '0')),
-  'user',
+  @user_password_hash,
   1
 FROM `tmp_live_users` u;
 
@@ -151,7 +156,7 @@ UPDATE `USERS` user_row
 JOIN `tmp_live_users` u ON user_row.`login` = CONCAT('sim.user', LPAD(u.`n`, 3, '0'))
 SET user_row.`id_role` = @user_role_id,
     user_row.`nom` = CONCAT('Demo', LPAD(u.`n`, 3, '0')),
-    user_row.`password` = 'user',
+    user_row.`password` = @user_password_hash,
     user_row.`actif` = 1,
     user_row.`date_suppression` = NULL;
 
@@ -289,6 +294,115 @@ WHERE respondent_number.`n` <> owner_number.`n`
     FROM `QUESTIONS_STAT` existing_stat
     WHERE existing_stat.`id_question` = question_row.`id_question`
       AND existing_stat.`id_user` = respondent_row.`id_user`
+  );
+
+INSERT INTO `QUESTIONS` (`id_user`, `id_statut`, `code`, `libelle`, `description`, `image`, `forwards`, `date_expiration`)
+SELECT
+  admin_row.`id_user`,
+  CASE
+    WHEN qn.`n` = 5 THEN @draft_status_id
+    WHEN qn.`n` = 10 THEN @idle_status_id
+    ELSE @active_status_id
+  END,
+  CONCAT('ADMIN-Q-', LPAD(qn.`n`, 2, '0')),
+  CASE qn.`n`
+    WHEN 1 THEN 'Synthese budgetaire nationale'
+    WHEN 2 THEN 'Priorites de moderation'
+    WHEN 3 THEN 'Mobilisation citoyenne'
+    WHEN 4 THEN 'Qualite des services publics'
+    WHEN 5 THEN 'Brouillon campagne locale'
+    WHEN 6 THEN 'Controle des contenus'
+    WHEN 7 THEN 'Experimentation territoires'
+    WHEN 8 THEN 'Participation des jeunes'
+    WHEN 9 THEN 'Accessibilite numerique'
+    ELSE 'Question archivee admin'
+  END,
+  CASE qn.`n`
+    WHEN 1 THEN 'Quelle priorite budgetaire doit etre mise en avant dans les prochains arbitrages ?'
+    WHEN 2 THEN 'Les criteres de moderation actuels sont-ils suffisamment clairs ?'
+    WHEN 3 THEN 'Faut-il renforcer les outils de mobilisation citoyenne sur la plateforme ?'
+    WHEN 4 THEN 'Les services publics locaux doivent-ils publier davantage d indicateurs de qualite ?'
+    WHEN 5 THEN 'Ce brouillon permet de tester le circuit de validation admin.'
+    WHEN 6 THEN 'Souhaitez-vous un controle plus strict des contenus signales ?'
+    WHEN 7 THEN 'Quels territoires doivent etre priorises pour les experimentations locales ?'
+    WHEN 8 THEN 'Faut-il reserver davantage d espaces de participation aux 16-25 ans ?'
+    WHEN 9 THEN 'La plateforme doit-elle renforcer ses options d accessibilite numerique ?'
+    ELSE 'Cette question inactive sert aux tests de vues archivees.'
+  END,
+  NULL,
+  30 + qn.`n` * 4,
+  DATE_ADD(NOW(), INTERVAL (20 + qn.`n` * 4) DAY)
+FROM `tmp_live_question_numbers` qn
+JOIN `USERS` admin_row ON admin_row.`login` = 'admin'
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM `QUESTIONS` existing_question
+  WHERE existing_question.`code` = CONCAT('ADMIN-Q-', LPAD(qn.`n`, 2, '0'))
+);
+
+INSERT INTO `QUESTION_CHOIX_GEO` (`id_question`, `id_ville`, `id_pays`, `id_dept`)
+SELECT question_row.`id_question`, v.`id_ville`, @fr_pays_id, d.`id_dept`
+FROM `tmp_live_question_numbers` qn
+JOIN `QUESTIONS` question_row ON question_row.`code` = CONCAT('ADMIN-Q-', LPAD(qn.`n`, 2, '0'))
+JOIN `tmp_live_cities` c ON c.`city_index` = MOD(qn.`n` + 3, 9) + 1
+JOIN `VILLE_REF` v ON v.`code` = c.`city_code`
+JOIN `DEPT_REF` d ON d.`id_dept` = v.`id_dept`
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM `QUESTION_CHOIX_GEO` qcg
+  WHERE qcg.`id_question` = question_row.`id_question`
+);
+
+INSERT IGNORE INTO `QUESTION_INTERETS` (`id_question`, `id_interet`, `priorite`)
+SELECT question_row.`id_question`, ref.`id_interet`, qp.`n`
+FROM `tmp_live_question_numbers` qn
+JOIN `tmp_live_question_priorities` qp
+JOIN `QUESTIONS` question_row ON question_row.`code` = CONCAT('ADMIN-Q-', LPAD(qn.`n`, 2, '0'))
+JOIN `tmp_live_interests` interest_row ON interest_row.`interest_index` = MOD(qn.`n` + qp.`n` * 5 - 1, 10) + 1
+JOIN `USER_INTERETS_REF` ref ON ref.`code` = interest_row.`interest_code`;
+
+INSERT INTO `QUESTIONS_STAT` (`id_question`, `id_answer`, `id_user`)
+SELECT
+  question_row.`id_question`,
+  answer_row.`id_answer`,
+  respondent_row.`id_user`
+FROM `tmp_live_question_numbers` qn
+JOIN `tmp_live_users` respondent_number
+JOIN `QUESTIONS` question_row ON question_row.`code` = CONCAT('ADMIN-Q-', LPAD(qn.`n`, 2, '0'))
+JOIN `USERS` respondent_row ON respondent_row.`login` = CONCAT('sim.user', LPAD(respondent_number.`n`, 3, '0'))
+JOIN `ANSWER_REF` answer_row ON answer_row.`code` = CASE
+  WHEN MOD(respondent_number.`n` + qn.`n`, 10) IN (0, 1) THEN 'NON'
+  WHEN MOD(respondent_number.`n` * 3 + qn.`n`, 10) IN (0, 1, 2) THEN 'NEUTRE'
+  ELSE 'OUI'
+END
+WHERE MOD(respondent_number.`n` * 5 + qn.`n`, 10) < 4
+  AND NOT EXISTS (
+    SELECT 1
+    FROM `QUESTIONS_STAT` existing_stat
+    WHERE existing_stat.`id_question` = question_row.`id_question`
+      AND existing_stat.`id_user` = respondent_row.`id_user`
+  );
+
+INSERT INTO `QUESTIONS_STAT` (`id_question`, `id_answer`, `id_user`)
+SELECT
+  question_row.`id_question`,
+  answer_row.`id_answer`,
+  admin_row.`id_user`
+FROM `tmp_live_users` owner_number
+JOIN `tmp_live_question_numbers` qn
+JOIN `QUESTIONS` question_row ON question_row.`code` = CONCAT('SIM-U', LPAD(owner_number.`n`, 3, '0'), '-Q', LPAD(qn.`n`, 2, '0'))
+JOIN `USERS` admin_row ON admin_row.`login` = 'admin'
+JOIN `ANSWER_REF` answer_row ON answer_row.`code` = CASE
+  WHEN MOD(owner_number.`n` + qn.`n`, 10) IN (0, 1) THEN 'NON'
+  WHEN MOD(owner_number.`n` * 2 + qn.`n`, 10) IN (0, 1, 2) THEN 'NEUTRE'
+  ELSE 'OUI'
+END
+WHERE MOD(owner_number.`n` * 4 + qn.`n`, 10) = 0
+  AND NOT EXISTS (
+    SELECT 1
+    FROM `QUESTIONS_STAT` existing_stat
+    WHERE existing_stat.`id_question` = question_row.`id_question`
+      AND existing_stat.`id_user` = admin_row.`id_user`
   );
 
 DROP TEMPORARY TABLE IF EXISTS `tmp_live_question_priorities`;
