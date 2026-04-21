@@ -13,18 +13,22 @@ const noStoreHeaders = {
   "surrogate-control": "no-store"
 };
 
-const isApiRequest = (url = "") => apiPrefixes.some((prefix) => url === prefix || url.startsWith(`${prefix}/`));
+const isApiPath = (url = "") => apiPrefixes.some((prefix) => url === prefix || url.startsWith(`${prefix}/`));
+const expectsDocument = (method = "GET", headers = {}) =>
+  method === "GET" && String(headers.accept || "").includes("text/html");
 
-const targetFor = (url = "") => {
-  if (isApiRequest(url)) {
+const isApiRequest = (request) => isApiPath(request.url) && !expectsDocument(request.method, request.headers);
+
+const targetFor = (request) => {
+  if (isApiRequest(request)) {
     return { port: backendPort, host: "127.0.0.1" };
   }
   return { port: frontendPort, host: "localhost" };
 };
 
 const proxyHttp = (clientRequest, clientResponse) => {
-  const target = targetFor(clientRequest.url);
-  const apiRequest = isApiRequest(clientRequest.url);
+  const target = targetFor(clientRequest);
+  const apiRequest = isApiRequest(clientRequest);
   const headers = {
     ...clientRequest.headers,
     host: `${target.host}:${target.port}`,
@@ -69,7 +73,7 @@ const proxyHttp = (clientRequest, clientResponse) => {
 };
 
 const proxyUpgrade = (request, socket, head) => {
-  const target = targetFor(request.url);
+  const target = targetFor(request);
   const upstream = net.connect(target.port, target.host, () => {
     upstream.write(
       `${request.method} ${request.url} HTTP/${request.httpVersion}\r\n` +
