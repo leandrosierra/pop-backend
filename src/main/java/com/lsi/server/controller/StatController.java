@@ -1,12 +1,14 @@
 package com.lsi.server.controller;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,25 +40,26 @@ public class StatController {
     QuestionsRepository questionsRepository;
 
     @GetMapping("/all")
-    public List<Stat> getAll() {
+    public Page<Stat> getAll(@PageableDefault(size = 10) Pageable pageable) {
         SecurityUtils.requireAdmin();
-        return statRepository.findAll();
+        return statRepository.findAll(pageable);
     }
 
     @GetMapping("/question/{id}")
-    public List<Stat> getStatsByQuestion(@PathVariable(value = "id") Long questionId) {
+    public Page<Stat> getStatsByQuestion(@PathVariable(value = "id") Long questionId,
+            @PageableDefault(size = 10) Pageable pageable) {
         Question question = questionsRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionId));
         if (!canReadQuestionStats(question)) {
             throw new SecurityException("Forbidden");
         }
-        return statRepository.findStatsByQuestionId(questionId);
+        return statRepository.findStatsByQuestionId(questionId, pageable);
     }
 
     @GetMapping("/user/current")
-    public List<Stat> getCurrentUserStats() {
+    public Page<Stat> getCurrentUserStats(@PageableDefault(size = 10) Pageable pageable) {
         long userId = SecurityUtils.currentPrincipal().getUserId();
-        return statRepository.findStatsByUserId(userId);
+        return statRepository.findStatsByUserId(userId, pageable);
     }
 
     @PostMapping("/create")

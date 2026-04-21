@@ -1,11 +1,13 @@
 package com.lsi.server.controller;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,8 +49,8 @@ public class LoiController {
 	UserRepository userRepository;
 
 	@GetMapping("/all")
-	public List<Loi> getAll() {
-		return loiRepository.findAll();
+	public Page<Loi> getAll(@PageableDefault(size = 10) Pageable pageable) {
+		return loiRepository.findAll(pageable);
 	}
 
 	@GetMapping("/{id}")
@@ -80,15 +82,16 @@ public class LoiController {
 	}
 
 	@GetMapping("/incoherence/all")
-	public List<LoiIncoherence> getAllIncoherences() {
-		return incoherenceRepository.findAll();
+	public Page<LoiIncoherence> getAllIncoherences(@PageableDefault(size = 10) Pageable pageable) {
+		return incoherenceRepository.findAll(pageable);
 	}
 
 	@GetMapping("/{id}/incoherences")
-	public List<LoiIncoherence> getIncoherencesByLoi(@PathVariable(value = "id") Long loiId) {
+	public Page<LoiIncoherence> getIncoherencesByLoi(@PathVariable(value = "id") Long loiId,
+			@PageableDefault(size = 10) Pageable pageable) {
 		loiRepository.findById(loiId)
 				.orElseThrow(() -> new ResourceNotFoundException("Loi", "id", loiId));
-		return incoherenceRepository.findIncoherencesByLoiId(loiId);
+		return incoherenceRepository.findIncoherencesByLoiId(loiId, pageable);
 	}
 
 	@PostMapping("/incoherence/create")
@@ -106,21 +109,22 @@ public class LoiController {
 	}
 
 	@GetMapping("/proposition/all")
-	public List<PropositionLoi> getAllPropositions() {
+	public Page<PropositionLoi> getAllPropositions(@PageableDefault(size = 10) Pageable pageable) {
 		SecurityUtils.requireAdmin();
-		return propositionRepository.findAll();
+		return propositionRepository.findAll(pageable);
 	}
 
 	@GetMapping("/proposition/question/{id}")
-	public List<PropositionLoi> getPropositionsByQuestion(@PathVariable(value = "id") Long questionId) {
+	public Page<PropositionLoi> getPropositionsByQuestion(@PathVariable(value = "id") Long questionId,
+			@PageableDefault(size = 10) Pageable pageable) {
 		Question question = getReadableQuestion(questionId);
-		return propositionRepository.findPropositionsByQuestionId(question.getId());
+		return propositionRepository.findPropositionsByQuestionId(question.getId(), pageable);
 	}
 
 	@GetMapping("/proposition/user/current")
-	public List<PropositionLoi> getCurrentUserPropositions() {
+	public Page<PropositionLoi> getCurrentUserPropositions(@PageableDefault(size = 10) Pageable pageable) {
 		long userId = SecurityUtils.currentPrincipal().getUserId();
-		return propositionRepository.findPropositionsByUserId(userId);
+		return propositionRepository.findPropositionsByUserId(userId, pageable);
 	}
 
 	@PostMapping("/proposition/create")

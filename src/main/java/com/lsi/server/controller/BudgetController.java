@@ -11,6 +11,9 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,9 +59,9 @@ public class BudgetController {
 	UserRepository userRepository;
 
 	@GetMapping("/all")
-	public List<Budget> getAll() {
+	public Page<Budget> getAll(@PageableDefault(size = 10) Pageable pageable) {
 		SecurityUtils.requireAdmin();
-		return budgetRepository.findAll();
+		return budgetRepository.findAll(pageable);
 	}
 
 	@GetMapping("/{id}")
@@ -68,9 +71,10 @@ public class BudgetController {
 	}
 
 	@GetMapping("/territoire/{niveau}/{code}")
-	public List<Budget> getBudgetsByTerritoire(@PathVariable(value = "niveau") String niveau,
-			@PathVariable(value = "code") String codeTerritoire) {
-		return budgetRepository.findBudgetsByTerritoire(niveau, codeTerritoire);
+	public Page<Budget> getBudgetsByTerritoire(@PathVariable(value = "niveau") String niveau,
+			@PathVariable(value = "code") String codeTerritoire,
+			@PageableDefault(size = 10) Pageable pageable) {
+		return budgetRepository.findBudgetsByTerritoire(niveau, codeTerritoire, pageable);
 	}
 
 	@PostMapping("/create")
@@ -104,9 +108,9 @@ public class BudgetController {
 	}
 
 	@GetMapping("/choix/user/current")
-	public List<BudgetChoix> getCurrentUserChoix() {
+	public Page<BudgetChoix> getCurrentUserChoix(@PageableDefault(size = 10) Pageable pageable) {
 		long userId = SecurityUtils.currentPrincipal().getUserId();
-		return choixRepository.findChoixByUserId(userId);
+		return choixRepository.findChoixByUserId(userId, pageable);
 	}
 
 	@GetMapping("/choix/{id}")

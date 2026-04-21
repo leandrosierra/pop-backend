@@ -1,11 +1,12 @@
 package com.lsi.server.controller;
 
 import java.util.Date;
-import java.util.List;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,9 +45,10 @@ public class DiscussionController {
 	UserRepository userRepository;
 
 	@GetMapping("/question/{id}/comments")
-	public List<QuestionComment> getCommentsByQuestion(@PathVariable(value = "id") Long questionId) {
+	public Page<QuestionComment> getCommentsByQuestion(@PathVariable(value = "id") Long questionId,
+			@PageableDefault(size = 10) Pageable pageable) {
 		Question question = getReadableQuestion(questionId);
-		return commentRepository.findCommentsByQuestionId(question.getId());
+		return commentRepository.findCommentsByQuestionId(question.getId(), pageable);
 	}
 
 	@PostMapping("/question/{id}/comment/create")
@@ -90,9 +92,10 @@ public class DiscussionController {
 	}
 
 	@GetMapping("/question/{id}/meetings")
-	public List<QuestionMeeting> getMeetingsByQuestion(@PathVariable(value = "id") Long questionId) {
+	public Page<QuestionMeeting> getMeetingsByQuestion(@PathVariable(value = "id") Long questionId,
+			@PageableDefault(size = 10) Pageable pageable) {
 		Question question = getReadableQuestion(questionId);
-		return meetingRepository.findMeetingsByQuestionId(question.getId());
+		return meetingRepository.findMeetingsByQuestionId(question.getId(), pageable);
 	}
 
 	@PostMapping("/question/{id}/meeting/create")

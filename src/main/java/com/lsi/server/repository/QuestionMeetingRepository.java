@@ -1,7 +1,7 @@
 package com.lsi.server.repository;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,5 +13,5 @@ import com.lsi.server.model.QuestionMeeting;
 public interface QuestionMeetingRepository extends JpaRepository<QuestionMeeting, Long> {
 
 	@Query("SELECT m FROM QuestionMeeting m where m.question.id = :questionId order by m.dateDebut asc")
-	List<QuestionMeeting> findMeetingsByQuestionId(@Param("questionId") Long questionId);
+	Page<QuestionMeeting> findMeetingsByQuestionId(@Param("questionId") Long questionId, Pageable pageable);
 }

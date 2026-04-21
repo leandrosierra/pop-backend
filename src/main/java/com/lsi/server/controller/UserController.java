@@ -7,6 +7,9 @@ import java.util.Locale;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,9 +52,9 @@ public class UserController {
     JdbcTemplate jdbcTemplate;
 
     @GetMapping("/all")
-    public List<User> getAll() {
+    public Page<User> getAll(@PageableDefault(size = 10) Pageable pageable) {
         SecurityUtils.requireAdmin();
-        return userRepository.findAll();
+        return userRepository.findAll(pageable);
     }
 
     @PostMapping("/create")
@@ -167,11 +170,10 @@ public class UserController {
     }
     
     @PostMapping("/{id}/questions")
-    public List<Question> getQuestionsForUser(@PathVariable(value = "id") Long userId) {
+    public Page<Question> getQuestionsForUser(@PathVariable(value = "id") Long userId,
+            @PageableDefault(size = 10) Pageable pageable) {
         SecurityUtils.requireCurrentUserOrAdmin(userId);
-    	List<Question> questions = userRepository.findQuestionForUser(userId);
-    	if(questions==null) throw new ResourceNotFoundException("Questions", "id", userId);
-    	return questions;
+        return userRepository.findQuestionForUser(userId, pageable);
     }
 
     private User loadCurrentUser() {
@@ -273,5 +275,3 @@ public class UserController {
         }
     }
 }
-
-

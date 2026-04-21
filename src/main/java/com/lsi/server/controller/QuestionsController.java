@@ -1,11 +1,13 @@
 package com.lsi.server.controller;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,14 +46,14 @@ public class QuestionsController {
     QuestionsChoixGeoRepository qChoixGeoRepository;
     
     @GetMapping("/all")
-    public List<Question> getAll() {
+    public Page<Question> getAll(@PageableDefault(size = 10) Pageable pageable) {
         SecurityUtils.requireAdmin();
-        return questionsRepository.findAll();
+        return questionsRepository.findAll(pageable);
     }
 
     @GetMapping("/feed")
-    public List<Question> getFeed() {
-        return questionsRepository.findQuestionsByStatutCode("ACTIF");
+    public Page<Question> getFeed(@PageableDefault(size = 10) Pageable pageable) {
+        return questionsRepository.findQuestionsByStatutCode("ACTIF", pageable);
     }
 
     @PostMapping("/create")
@@ -83,17 +85,16 @@ public class QuestionsController {
     }
     
     @GetMapping("/user/current")
-    public List<Question> getCurrentUserQuestions() {
+    public Page<Question> getCurrentUserQuestions(@PageableDefault(size = 10) Pageable pageable) {
         long userId = SecurityUtils.currentPrincipal().getUserId();
-    	return userRepository.findQuestionByUser(userId);
+        return userRepository.findQuestionByUser(userId, pageable);
     }
 
     @PostMapping("/user/{id}")
-    public List<Question> getQuestionsByUser(@PathVariable(value = "id") Long userId) {
+    public Page<Question> getQuestionsByUser(@PathVariable(value = "id") Long userId,
+            @PageableDefault(size = 10) Pageable pageable) {
         SecurityUtils.requireCurrentUserOrAdmin(userId);
-    	List<Question> questions = userRepository.findQuestionByUser(userId);
-    	if(questions==null) throw new ResourceNotFoundException("Questions", "id", userId);
-    	return questions;
+        return userRepository.findQuestionByUser(userId, pageable);
     }
 
     @PutMapping("/update")

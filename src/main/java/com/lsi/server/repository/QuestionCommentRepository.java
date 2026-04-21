@@ -1,7 +1,7 @@
 package com.lsi.server.repository;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,5 +13,5 @@ import com.lsi.server.model.QuestionComment;
 public interface QuestionCommentRepository extends JpaRepository<QuestionComment, Long> {
 
 	@Query("SELECT c FROM QuestionComment c where c.question.id = :questionId order by c.dateCreation asc")
-	List<QuestionComment> findCommentsByQuestionId(@Param("questionId") Long questionId);
+	Page<QuestionComment> findCommentsByQuestionId(@Param("questionId") Long questionId, Pageable pageable);
 }

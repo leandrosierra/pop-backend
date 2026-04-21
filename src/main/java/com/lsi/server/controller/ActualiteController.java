@@ -2,12 +2,14 @@ package com.lsi.server.controller;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,8 +49,8 @@ public class ActualiteController {
 	StatutRepository statutRepository;
 
 	@GetMapping("/all")
-	public List<Actualite> getAll() {
-		return actualiteRepository.findActualitesRecentes();
+	public Page<Actualite> getAll(@PageableDefault(size = 10) Pageable pageable) {
+		return actualiteRepository.findActualitesRecentes(pageable);
 	}
 
 	@PostMapping("/create")
@@ -60,8 +62,8 @@ public class ActualiteController {
 	}
 
 	@GetMapping("/suggestions")
-	public List<QuestionSuggestion> getSuggestions() {
-		return suggestionRepository.findSuggestionsRecentes();
+	public Page<QuestionSuggestion> getSuggestions(@PageableDefault(size = 10) Pageable pageable) {
+		return suggestionRepository.findSuggestionsRecentes(pageable);
 	}
 
 	@PostMapping("/{id}/question/suggest")

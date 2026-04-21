@@ -1,7 +1,7 @@
 package com.lsi.server.repository;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,5 +13,5 @@ import com.lsi.server.model.LoiIncoherence;
 public interface LoiIncoherenceRepository extends JpaRepository<LoiIncoherence, Long> {
 
 	@Query("SELECT i FROM LoiIncoherence i where i.loi.id = :loiId or i.loiReference.id = :loiId order by i.dateCreation desc")
-	List<LoiIncoherence> findIncoherencesByLoiId(@Param("loiId") Long loiId);
+	Page<LoiIncoherence> findIncoherencesByLoiId(@Param("loiId") Long loiId, Pageable pageable);
 }
