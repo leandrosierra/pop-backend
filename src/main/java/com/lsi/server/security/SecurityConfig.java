@@ -1,5 +1,7 @@
 package com.lsi.server.security;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -83,14 +85,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         String origin = request.getHeader("Origin");
         configuration.setAllowedOrigins(isAllowedOrigin(origin) ? Arrays.asList(origin) : LOCAL_ORIGINS);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
         return configuration;
       }
     };
   }
 
   private boolean isAllowedOrigin(String origin) {
-    return LOCAL_ORIGINS.contains(origin);
+    if (origin == null) {
+      return false;
+    }
+    if (LOCAL_ORIGINS.contains(origin)) {
+      return true;
+    }
+    try {
+      URI uri = new URI(origin);
+      String host = uri.getHost();
+      String scheme = uri.getScheme();
+      return ("http".equals(scheme) || "https".equals(scheme))
+          && ("localhost".equals(host) || "127.0.0.1".equals(host))
+          && uri.getPort() > 0;
+    } catch (URISyntaxException exception) {
+      return false;
+    }
   }
 }
