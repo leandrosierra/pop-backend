@@ -43,3 +43,6 @@ target/
 *.pem
 
 src/main/generated
+
+# Local runtime state
+runtime/
