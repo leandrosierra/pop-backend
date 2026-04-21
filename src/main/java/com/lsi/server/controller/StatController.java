@@ -2,6 +2,7 @@ package com.lsi.server.controller;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -36,6 +37,15 @@ public class StatController {
 
     @PostMapping("/create")
     public Stat create(@Valid @RequestBody Stat stat) {
+        if (stat.getQuestion() != null && stat.getUser() != null) {
+            Optional<Stat> existingStat = statRepository.findStatByQuestionAndUser(stat.getQuestion().getId(), stat.getUser().getId());
+            if (existingStat.isPresent()) {
+                Stat existing = existingStat.get();
+                existing.setReponse(stat.getReponse());
+                existing.setDateModification(new Date());
+                return statRepository.save(existing);
+            }
+        }
         return statRepository.save(stat);
     }
 

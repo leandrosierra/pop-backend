@@ -432,3 +432,10 @@ WHERE NOT EXISTS (
   WHERE qs.`id_question` = q.`id_question`
     AND qs.`id_user` = u.`id_user`
 );
+
+DELETE qs
+FROM `QUESTIONS_STAT` qs
+JOIN `QUESTIONS_STAT` keep_qs
+  ON keep_qs.`id_question` = qs.`id_question`
+ AND keep_qs.`id_user` = qs.`id_user`
+ AND keep_qs.`id_questions_stat` < qs.`id_questions_stat`;
