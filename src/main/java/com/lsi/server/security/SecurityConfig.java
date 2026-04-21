@@ -1,6 +1,10 @@
 package com.lsi.server.security;
 
+import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,10 +14,11 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+  private static final List<String> LOCAL_ORIGINS = Arrays.asList("http://localhost:8082", "http://127.0.0.1:8082");
+
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http
@@ -32,14 +37,28 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList("http://localhost:8082", "http://127.0.0.1:8082"));
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
-    configuration.setAllowCredentials(true);
+    return new CorsConfigurationSource() {
+      @Override
+      public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+        CorsConfiguration configuration = new CorsConfiguration();
+        String origin = request.getHeader("Origin");
+        configuration.setAllowedOrigins(isAllowedOrigin(origin) ? Arrays.asList(origin) : LOCAL_ORIGINS);
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowCredentials(true);
+        return configuration;
+      }
+    };
+  }
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
-    return source;
+  private boolean isAllowedOrigin(String origin) {
+    if (LOCAL_ORIGINS.contains(origin)) {
+      return true;
+    }
+    if (origin == null) {
+      return false;
+    }
+    URI uri = URI.create(origin);
+    return "https".equals(uri.getScheme()) && uri.getHost() != null && uri.getHost().endsWith(".trycloudflare.com");
   }
 }

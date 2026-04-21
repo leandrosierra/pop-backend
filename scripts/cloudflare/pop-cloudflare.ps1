@@ -29,7 +29,7 @@ $CloudflaredPath = Join-Path $ToolsRoot 'cloudflared.exe'
 $TryCloudflarePattern = 'https?://[a-z0-9-]+\.trycloudflare\.com'
 
 function Write-Step([string]$Message) {
-  Write-Output "[POP Cloudflare] $Message"
+  Write-Host "[POP Cloudflare] $Message"
 }
 
 function Read-State {
@@ -63,6 +63,9 @@ function Get-StateInt($State, [string]$Name) {
   if (!$State) { return 0 }
   $property = $State.PSObject.Properties[$Name]
   if (!$property -or $null -eq $property.Value) { return 0 }
+  if ($property.Value -is [array]) {
+    return [int]($property.Value | Where-Object { $_ -is [int] -or $_ -match '^\d+$' } | Select-Object -Last 1)
+  }
   return [int]$property.Value
 }
 
@@ -75,6 +78,8 @@ function Stop-CurrentState {
   }
   $proxyPid = Get-ListenerPid $ProxyPort
   if ($proxyPid) { Stop-Pid $proxyPid }
+  $frontendPid = Get-ListenerPid $FrontendPort
+  if ($frontendPid) { Stop-Pid $frontendPid }
   Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
     Where-Object {
       ($_.CommandLine -match 'cloudflared' -and $_.CommandLine -match "127\.0\.0\.1:$ProxyPort") -or
@@ -189,12 +194,13 @@ function Start-Frontend([string]$PublicUrl) {
   if ($existingPid) { Stop-Pid $existingPid; Start-Sleep -Seconds 3 }
   if (!(Test-Path -LiteralPath $FrontendRoot)) { throw "Front introuvable: $FrontendRoot" }
   $env:EXPO_PUBLIC_POP_API_ORIGIN = $PublicUrl
+  $env:EXPO_PUBLIC_POP_API_MODE = 'legacy'
   $env:EXPO_PUBLIC_POP_API_BASIC_AUTH = 'user:password'
   Write-Step "Démarrage front Expo avec API publique"
-  $process = Start-Process -FilePath 'npm.cmd' -ArgumentList @('run','web','--','--port',"$FrontendPort",'--host','localhost') -WorkingDirectory $FrontendRoot -RedirectStandardOutput $FrontendOutLog -RedirectStandardError $FrontendErrLog -WindowStyle Hidden -PassThru
+  Start-Process -FilePath 'npm.cmd' -ArgumentList @('run','web','--','--port',"$FrontendPort",'--host','localhost') -WorkingDirectory $FrontendRoot -RedirectStandardOutput $FrontendOutLog -RedirectStandardError $FrontendErrLog -WindowStyle Hidden | Out-Null
   Start-Sleep -Seconds 15
   if (!(Test-Listening $FrontendPort)) { throw "Front indisponible sur le port $FrontendPort." }
-  return $process.Id
+  return (Get-ListenerPid $FrontendPort)
 }
 
 function Show-Status {
