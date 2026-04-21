@@ -233,7 +233,7 @@ function Start-Frontend($EnvConfig) {
   $env:EXPO_PUBLIC_POP_API_MODE = 'legacy'
   $env:EXPO_PUBLIC_POP_ENV_LABEL = $EnvConfig.Label
   Step "$($EnvConfig.Label) front -> $($EnvConfig.FrontendPort)"
-  Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'web', '--', '--port', "$($EnvConfig.FrontendPort)", '--host', 'localhost') -WorkingDirectory $FrontendRoot -RedirectStandardOutput (Join-Path $logs 'frontend.out.log') -RedirectStandardError (Join-Path $logs 'frontend.err.log') -WindowStyle Hidden | Out-Null
+  Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'web', '--', '--clear', '--port', "$($EnvConfig.FrontendPort)", '--host', 'localhost') -WorkingDirectory $FrontendRoot -RedirectStandardOutput (Join-Path $logs 'frontend.out.log') -RedirectStandardError (Join-Path $logs 'frontend.err.log') -WindowStyle Hidden | Out-Null
   Wait-Port $EnvConfig.FrontendPort $HealthcheckTimeoutSec
   return Get-ListenerPid $EnvConfig.FrontendPort
 }

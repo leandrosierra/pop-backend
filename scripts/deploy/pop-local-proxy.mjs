@@ -5,7 +5,13 @@ const proxyPort = Number(process.env.POP_PROXY_PORT || 8090);
 const frontendPort = Number(process.env.POP_FRONTEND_PORT || 8082);
 const backendPort = Number(process.env.POP_BACKEND_PORT || 8080);
 
-const apiPrefixes = ["/user", "/question", "/stat"];
+const apiPrefixes = ["/user", "/question", "/stat", "/discussion", "/budget", "/actualite", "/loi"];
+const noStoreHeaders = {
+  "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  pragma: "no-cache",
+  expires: "0",
+  "surrogate-control": "no-store"
+};
 
 const isApiRequest = (url = "") => apiPrefixes.some((prefix) => url === prefix || url.startsWith(`${prefix}/`));
 
@@ -25,6 +31,8 @@ const proxyHttp = (clientRequest, clientResponse) => {
     "x-forwarded-host": clientRequest.headers.host || "",
     "x-forwarded-proto": "http"
   };
+  delete headers["if-none-match"];
+  delete headers["if-modified-since"];
   if (apiRequest && headers.origin) {
     headers.origin = `http://localhost:${proxyPort}`;
   }
@@ -38,7 +46,12 @@ const proxyHttp = (clientRequest, clientResponse) => {
       headers
     },
     (upstreamResponse) => {
-      clientResponse.writeHead(upstreamResponse.statusCode || 502, upstreamResponse.headers);
+      const responseHeaders = {
+        ...upstreamResponse.headers,
+        ...noStoreHeaders
+      };
+      delete responseHeaders.etag;
+      clientResponse.writeHead(upstreamResponse.statusCode || 502, responseHeaders);
       upstreamResponse.on("error", () => clientResponse.destroy());
       upstreamResponse.pipe(clientResponse);
     }
