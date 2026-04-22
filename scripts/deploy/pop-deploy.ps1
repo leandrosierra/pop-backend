@@ -16,7 +16,7 @@ try { [Console]::OutputEncoding = [Text.UTF8Encoding]::new() } catch {}
 $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackendRoot = (Resolve-Path (Join-Path $ScriptRoot '..\..')).Path
 $WorkspaceRoot = (Resolve-Path (Join-Path $BackendRoot '..')).Path
-$FrontendRoot = Join-Path $WorkspaceRoot 'pop-master'
+$FrontendRoot = Join-Path $WorkspaceRoot 'frontend'
 $ConfigPath = Join-Path $BackendRoot 'config\deploy-environments.json'
 $RuntimeRoot = Join-Path $BackendRoot 'runtime\deploy'
 $WarSource = Join-Path $BackendRoot 'target\app-server-1.0.0.war'
@@ -164,7 +164,7 @@ function Set-EnvFromUserIfDefined([string[]]$Names) {
 function Ensure-MariaDb {
   if (Test-Listening 3306) { return }
   $mariaBase = Join-Path $env:USERPROFILE '.codex\tools\mariadb-10.11.16-winx64'
-  $dataDir = Join-Path $env:USERPROFILE '.codex\tools\mariadb-data-pop-backend-main'
+  $dataDir = Join-Path $env:USERPROFILE '.codex\tools\mariadb-data-pop'
   $server = Join-Path $mariaBase 'bin\mariadbd.exe'
   $config = Join-Path $dataDir 'my.ini'
   if (!(Test-Path -LiteralPath $server) -or !(Test-Path -LiteralPath $config)) {
