@@ -8,8 +8,21 @@
 	<version>1.0.0</version>
 	<packaging>war</packaging>
 
-	<name>easy-notes</name>
-	<description>Rest API for a Simple Note Taking Application</description>
+	<name>pop-backend</name>
+	<description>POP — Backend API for direct democracy platform (propose, debate, vote, referendum)</description>
+	<url>https://github.com/leandrosierra/pop-backend</url>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<url>https://github.com/leandrosierra/pop-backend</url>
+		<connection>scm:git:git://github.com/leandrosierra/pop-backend.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/leandrosierra/pop-backend.git</developerConnection>
+	</scm>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
