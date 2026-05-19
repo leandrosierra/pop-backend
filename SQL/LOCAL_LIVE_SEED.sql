@@ -7,7 +7,7 @@ SET @active_status_id = (SELECT `id_statut` FROM `STATUT_REF` WHERE `code` = 'AC
 SET @draft_status_id = (SELECT `id_statut` FROM `STATUT_REF` WHERE `code` = 'BROUILLON' LIMIT 1);
 SET @idle_status_id = (SELECT `id_statut` FROM `STATUT_REF` WHERE `code` = 'INACTIF' LIMIT 1);
 SET @fr_pays_id = (SELECT `id_pays` FROM `PAYS_REF` WHERE `code` = 'FR' LIMIT 1);
-SET @user_password_hash = '$2a$12$ezNWmur7lKIVPok4XpBTo.ojgyV73kCiCYUTHfe7wLfnIGWso0QWu';
+SET @user_password_hash = '$2b$12$2ox0rNAx81MQoOFDvWD/pul7ArqTGE58qQGgRJeRCWj8HTS6e5Dsq';
 
 ALTER TABLE `USERS` MODIFY `password` VARCHAR(100) NOT NULL;
 

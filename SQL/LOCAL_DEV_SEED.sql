@@ -4,9 +4,9 @@ SET NAMES utf8mb4;
 
 SET @admin_role_id = (SELECT `id_role` FROM `ROLES` WHERE `code` = 'ADMIN' LIMIT 1);
 SET @user_role_id = (SELECT `id_role` FROM `ROLES` WHERE `code` = 'USER' LIMIT 1);
-SET @admin_password_hash = '$2a$12$B.L4NsQXNhBrCVRyAEq/Yu4k6InJcKrByQihTU9lYHiMtNKloD5hS';
-SET @user_password_hash = '$2a$12$ezNWmur7lKIVPok4XpBTo.ojgyV73kCiCYUTHfe7wLfnIGWso0QWu';
-SET @default_password_hash = '$2a$12$zFYMf2HGDbuXDp8dq6tplesCg9xq2DVTEEDqVS9yT8yf36Ctq.uIO';
+SET @admin_password_hash = '$2b$12$FsZdl6hJVvd2FsmP5HmILeQvvndiQjgOfpIPbhzPLgeN01mf42XT6';
+SET @user_password_hash = '$2b$12$2ox0rNAx81MQoOFDvWD/pul7ArqTGE58qQGgRJeRCWj8HTS6e5Dsq';
+SET @default_password_hash = '$2b$12$EeeCZKvqhJn52In8/iy83unuQPZKxU2zew1PxYQETca5vtWBTvEC.';
 
 ALTER TABLE `USERS` MODIFY `password` VARCHAR(100) NOT NULL;
 
