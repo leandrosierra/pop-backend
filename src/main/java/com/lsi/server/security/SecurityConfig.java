@@ -105,9 +105,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       URI uri = new URI(origin);
       String host = uri.getHost();
       String scheme = uri.getScheme();
-      return ("http".equals(scheme) || "https".equals(scheme))
+      // Allow localhost/127.0.0.1 with any port (dev)
+      if (("http".equals(scheme) || "https".equals(scheme))
           && ("localhost".equals(host) || "127.0.0.1".equals(host))
-          && uri.getPort() > 0;
+          && uri.getPort() > 0) {
+        return true;
+      }
+      // Allow all subdomains of leandro-sierra.com over HTTPS (production)
+      return "https".equals(scheme)
+          && host != null
+          && (host.equals("leandro-sierra.com") || host.endsWith(".leandro-sierra.com"));
     } catch (URISyntaxException exception) {
       return false;
     }
