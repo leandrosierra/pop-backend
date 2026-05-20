@@ -58,13 +58,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .accessDeniedHandler((request, response, exception) -> response.sendError(HttpServletResponse.SC_FORBIDDEN))
         .and()
       .authorizeRequests()
+        // CORS preflight — toujours ouvert (sinon le browser ne peut pas
+        // valider l'origine avant d'envoyer la vraie requête).
         .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-        .antMatchers(HttpMethod.GET, "/").permitAll()
+        // Endpoints publics strictement nécessaires : login/signup uniquement.
+        // PAS de GET / public (cf. IndexController retiré pour ne pas exposer
+        // d'info sur le backend à un visiteur anonyme).
         .antMatchers(HttpMethod.POST, "/user/login").permitAll()
         .antMatchers(HttpMethod.POST, "/user/oauth/login").permitAll()
         .antMatchers(HttpMethod.POST, "/user/create").permitAll()
-        .antMatchers("/user/**", "/question/**", "/stat/**", "/discussion/**", "/budget/**", "/actualite/**", "/loi/**").authenticated()
-        .anyRequest().permitAll()
+        // TOUT le reste exige un token. anyRequest().permitAll() laissait
+        // n'importe quel chemin non listé en accès libre — vulnérabilité.
+        .anyRequest().authenticated()
         .and()
       .httpBasic().disable()
       .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
