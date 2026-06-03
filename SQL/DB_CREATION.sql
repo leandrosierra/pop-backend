@@ -1,953 +1,460 @@
--- MySQL Workbench Forward Engineering
-
-SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
-SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
-
--- -----------------------------------------------------
--- Schema poplitic_db
--- -----------------------------------------------------
-DROP SCHEMA IF EXISTS `poplitic_db` ;
-
--- -----------------------------------------------------
--- Schema poplitic_db
--- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `poplitic_db` DEFAULT CHARACTER SET latin1 ;
-USE `poplitic_db` ;
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`ANSWER_REF`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`ANSWER_REF` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`ANSWER_REF` (
-  `id_answer` INT(11) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(45) NULL DEFAULT NULL,
-  `libelle` VARCHAR(256) NULL DEFAULT NULL,
-  PRIMARY KEY (`id_answer`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`STATUT_REF`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`STATUT_REF` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`STATUT_REF` (
-  `id_statut` INT(11) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(45) NULL DEFAULT NULL,
-  `libelle` VARCHAR(256) NULL DEFAULT NULL,
-  PRIMARY KEY (`id_statut`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`ROLES`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`ROLES` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`ROLES` (
-  `id_role` INT NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(45) NULL DEFAULT NULL,
-  `libelle` VARCHAR(255) NULL DEFAULT NULL,
-  PRIMARY KEY (`id_role`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 1
-DEFAULT CHARACTER SET = latin1;
-
-CREATE UNIQUE INDEX `code_UNIQUE` ON `poplitic_db`.`ROLES` (`code` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`USER_PARAMETRES`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`USER_PARAMETRES` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`USER_PARAMETRES` (
-  `id_parametre` INT(11) NOT NULL AUTO_INCREMENT,
-  `notifications` TINYINT(4) NOT NULL DEFAULT 0,
-  `anonymat` TINYINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id_parametre`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 1
-DEFAULT CHARACTER SET = latin1;
-
-CREATE UNIQUE INDEX `id_parameter_UNIQUE` ON `poplitic_db`.`USER_PARAMETRES` (`id_parametre` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`USER_POSITION`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`USER_POSITION` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`USER_POSITION` (
-  `id_position` INT(11) NOT NULL AUTO_INCREMENT,
-  `latitude` FLOAT NULL DEFAULT NULL,
-  `longitude` FLOAT NULL DEFAULT NULL,
-  PRIMARY KEY (`id_position`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 1
-DEFAULT CHARACTER SET = latin1;
-
-CREATE UNIQUE INDEX `id_position_UNIQUE` ON `poplitic_db`.`USER_POSITION` (`id_position` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`USERS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`USERS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`USERS` (
-  `id_user` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_role` INT(11) NOT NULL,
-  `id_parametre` INT(11) NOT NULL,
-  `id_position` INT(11) NOT NULL,
-  `login` VARCHAR(45) NOT NULL,
-  `nom` VARCHAR(45) NULL DEFAULT NULL,
-  `prenom` VARCHAR(45) NULL DEFAULT NULL,
-  `genre` VARCHAR(45) NULL DEFAULT NULL,
-  `email` VARCHAR(255) NOT NULL,
-  `numero_electeur` VARCHAR(45) NULL,
-  `password` VARCHAR(100) NOT NULL,
-  `actif` TINYINT(4) NULL DEFAULT NULL,
-  `date_creation` DATETIME NULL DEFAULT NULL,
-  `date_modification` DATETIME NULL DEFAULT NULL,
-  `date_suppression` DATETIME NULL DEFAULT NULL,
-  PRIMARY KEY (`id_user`, `id_role`, `id_parametre`, `id_position`),
-  CONSTRAINT `fk_USERS_ROLES1`
-    FOREIGN KEY (`id_role`)
-    REFERENCES `poplitic_db`.`ROLES` (`id_role`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USERS_USER_PARAMETERS1`
-    FOREIGN KEY (`id_parametre`)
-    REFERENCES `poplitic_db`.`USER_PARAMETRES` (`id_parametre`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USERS_USER_POSITION1`
-    FOREIGN KEY (`id_position`)
-    REFERENCES `poplitic_db`.`USER_POSITION` (`id_position`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-AUTO_INCREMENT = 1
-DEFAULT CHARACTER SET = latin1;
-
-CREATE UNIQUE INDEX `id_user_UNIQUE` ON `poplitic_db`.`USERS` (`id_user` ASC) ;
-
-CREATE UNIQUE INDEX `login_UNIQUE` ON `poplitic_db`.`USERS` (`login` ASC) ;
-
-CREATE INDEX `fk_USERS_USER_POSITION1_idx` ON `poplitic_db`.`USERS` (`id_position` ASC) ;
-
-CREATE UNIQUE INDEX `email_UNIQUE` ON `poplitic_db`.`USERS` (`email` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`QUESTIONS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`QUESTIONS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTIONS` (
-  `id_question` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_user` INT(11) NOT NULL,
-  `id_statut` INT(11) NOT NULL,
-  `code` VARCHAR(45) NULL DEFAULT NULL,
-  `libelle` VARCHAR(255) NULL DEFAULT NULL,
-  `description` TEXT NULL DEFAULT NULL,
-  `image` TEXT NULL DEFAULT NULL,
-  `forwards` INT NULL,
-  `date_creation` DATETIME NULL DEFAULT NULL,
-  `date_modification` DATETIME NULL DEFAULT NULL,
-  `date_expiration` DATETIME NULL DEFAULT NULL,
-  PRIMARY KEY (`id_question`, `id_user`, `id_statut`),
-  CONSTRAINT `fk_POP_QUESTIONS_POP_STATUT_REF1`
-    FOREIGN KEY (`id_statut`)
-    REFERENCES `poplitic_db`.`STATUT_REF` (`id_statut`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_POP_QUESTIONS_USERS1`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE UNIQUE INDEX `id_question_UNIQUE` ON `poplitic_db`.`QUESTIONS` (`id_question` ASC) ;
-
-CREATE INDEX `fk_POP_QUESTIONS_POP_STATUT_REF1_idx` ON `poplitic_db`.`QUESTIONS` (`id_statut` ASC) ;
-
-CREATE INDEX `fk_POP_QUESTIONS_USERS1_idx` ON `poplitic_db`.`QUESTIONS` (`id_user` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`QUESTIONS_STAT`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`QUESTIONS_STAT` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTIONS_STAT` (
-  `id_questions_stat` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_question` INT(11) NOT NULL,
-  `id_answer` INT(11) NOT NULL,
-  `id_user` INT(11) NOT NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_questions_stat`, `id_question`, `id_answer`, `id_user`),
-  CONSTRAINT `fk_POP_QUESTIONS_STAT_POP_ANSWER_REF1`
-    FOREIGN KEY (`id_answer`)
-    REFERENCES `poplitic_db`.`ANSWER_REF` (`id_answer`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_POP_QUESTIONS_STAT_POP_QUESTIONS1`
-    FOREIGN KEY (`id_question`)
-    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_POP_QUESTIONS_STAT_USERS1`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_POP_QUESTIONS_STAT_POP_QUESTIONS1_idx` ON `poplitic_db`.`QUESTIONS_STAT` (`id_question` ASC) ;
-
-CREATE INDEX `fk_POP_QUESTIONS_STAT_POP_ANSWER_REF1_idx` ON `poplitic_db`.`QUESTIONS_STAT` (`id_answer` ASC) ;
-
-CREATE INDEX `fk_POP_QUESTIONS_STAT_USERS1_idx` ON `poplitic_db`.`QUESTIONS_STAT` (`id_user` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`USER_INTERETS_REF`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`USER_INTERETS_REF` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`USER_INTERETS_REF` (
-  `id_interet` INT(11) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(45) NOT NULL,
-  `libelle` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id_interet`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE UNIQUE INDEX `code_UNIQUE` ON `poplitic_db`.`USER_INTERETS_REF` (`code` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`USER_INTERETS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`USER_INTERETS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`USER_INTERETS` (
-  `id_user` INT NOT NULL,
-  `id_interet` INT NOT NULL,
-  `priorite` INT NULL,
-  PRIMARY KEY (`id_user`, `id_interet`),
-  CONSTRAINT `fk_USERS_USER_INTERETS_REF_USERS1`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USERS_has_USER_INTERETS_REF_USER_INTERETS_REF1`
-    FOREIGN KEY (`id_interet`)
-    REFERENCES `poplitic_db`.`USER_INTERETS_REF` (`id_interet`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_POP_USERS_has_USER_INTERETS_REF_USER_INTERETS_REF1_idx` ON `poplitic_db`.`USER_INTERETS` (`id_interet` ASC) ;
-
-CREATE INDEX `fk_POP_USERS_has_USER_INTERETS_REF_POP_USERS1_idx` ON `poplitic_db`.`USER_INTERETS` (`id_user` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`USER_ADRESSE`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`USER_ADRESSE` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`USER_ADRESSE` (
-  `id_adresse` INT NOT NULL AUTO_INCREMENT,
-  `id_user` INT NOT NULL,
-  `rue` VARCHAR(45) NULL DEFAULT NULL,
-  `complement` VARCHAR(45) NULL DEFAULT NULL,
-  `ville` VARCHAR(45) NULL DEFAULT NULL,
-  `codepostal` VARCHAR(45) NULL DEFAULT NULL,
-  `pays` VARCHAR(45) NULL DEFAULT NULL,
-  `telephone` VARCHAR(45) NULL,
-  PRIMARY KEY (`id_adresse`, `id_user`),
-  CONSTRAINT `fk_USER_ADRESSE_USERS`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-AUTO_INCREMENT = 1
-DEFAULT CHARACTER SET = latin1;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`PAYS_REF`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`PAYS_REF` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`PAYS_REF` (
-  `id_pays` INT NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(45) NULL,
-  `libelle` VARCHAR(255) NULL,
-  PRIMARY KEY (`id_pays`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 1;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`DEPT_REF`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`DEPT_REF` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`DEPT_REF` (
-  `id_dept` INT NOT NULL AUTO_INCREMENT,
-  `id_pays` INT NOT NULL,
-  `code` VARCHAR(45) NULL,
-  `libelle` VARCHAR(255) NULL,
-  PRIMARY KEY (`id_dept`, `id_pays`),
-  CONSTRAINT `fk_DEPT_REF_PAYS_REF1`
-    FOREIGN KEY (`id_pays`)
-    REFERENCES `poplitic_db`.`PAYS_REF` (`id_pays`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-AUTO_INCREMENT = 1;
-
-CREATE INDEX `fk_DEPT_REF_PAYS_REF1_idx` ON `poplitic_db`.`DEPT_REF` (`id_pays` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`VILLE_REF`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`VILLE_REF` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`VILLE_REF` (
-  `id_ville` INT NOT NULL AUTO_INCREMENT,
-  `id_dept` INT NOT NULL,
-  `code` VARCHAR(45) NULL,
-  `libelle` VARCHAR(255) NULL,
-  PRIMARY KEY (`id_ville`, `id_dept`),
-  CONSTRAINT `fk_VILLE_REF_DEPT_REF1`
-    FOREIGN KEY (`id_dept`)
-    REFERENCES `poplitic_db`.`DEPT_REF` (`id_dept`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-AUTO_INCREMENT = 1;
-
-CREATE INDEX `fk_VILLE_REF_DEPT_REF1_idx` ON `poplitic_db`.`VILLE_REF` (`id_dept` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`USER_CHOIX_GEO`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`USER_CHOIX_GEO` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`USER_CHOIX_GEO` (
-  `id_user` INT NOT NULL,
-  `id_ville` INT NULL,
-  `id_pays` INT NULL,
-  `id_dept` INT NULL,
-  `USER_CHOIX_GEOcol` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id_user`, `USER_CHOIX_GEOcol`),
-  CONSTRAINT `fk_USERS_has_VILLE_REF_USERS1`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USERS_CHOIX_GEO_VILLE_REF1`
-    FOREIGN KEY (`id_ville`)
-    REFERENCES `poplitic_db`.`VILLE_REF` (`id_ville`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USERS_CHOIX_GEO_PAYS_REF1`
-    FOREIGN KEY (`id_pays`)
-    REFERENCES `poplitic_db`.`PAYS_REF` (`id_pays`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USERS_CHOIX_GEO_DEPT_REF1`
-    FOREIGN KEY (`id_dept`)
-    REFERENCES `poplitic_db`.`DEPT_REF` (`id_dept`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_USERS_has_VILLE_REF_USERS1_idx` ON `poplitic_db`.`USER_CHOIX_GEO` (`id_user` ASC) ;
-
-CREATE INDEX `fk_USERS_CHOIX_GEO_VILLE_REF1_idx` ON `poplitic_db`.`USER_CHOIX_GEO` (`id_ville` ASC) ;
-
-CREATE INDEX `fk_USERS_CHOIX_GEO_PAYS_REF1_idx` ON `poplitic_db`.`USER_CHOIX_GEO` (`id_pays` ASC) ;
-
-CREATE INDEX `fk_USERS_CHOIX_GEO_DEPT_REF1_idx` ON `poplitic_db`.`USER_CHOIX_GEO` (`id_dept` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`LANGUES_REF`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`LANGUES_REF` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`LANGUES_REF` (
-  `id_langue` INT NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(45) NULL,
-  `libelle` VARCHAR(255) NULL,
-  PRIMARY KEY (`id_langue`))
-ENGINE = InnoDB;
-
-CREATE UNIQUE INDEX `code_UNIQUE` ON `poplitic_db`.`LANGUES_REF` (`code` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`USER_PARAMETRES_LANGUE`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`USER_PARAMETRES_LANGUE` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`USER_PARAMETRES_LANGUE` (
-  `id_parametre` INT NOT NULL,
-  `id_langue` INT NOT NULL,
-  `ordre` INT NULL,
-  PRIMARY KEY (`id_parametre`, `id_langue`),
-  CONSTRAINT `fk_USER_PARAMETRES_has_LANGUE_REF_USER_PARAMETRES1`
-    FOREIGN KEY (`id_parametre`)
-    REFERENCES `poplitic_db`.`USER_PARAMETRES` (`id_parametre`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USER_PARAMETRES_LANGUE_LANGUES_REf1`
-    FOREIGN KEY (`id_langue`)
-    REFERENCES `poplitic_db`.`LANGUES_REF` (`id_langue`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_USER_PARAMETRES_has_LANGUE_REF_USER_PARAMETRES1_idx` ON `poplitic_db`.`USER_PARAMETRES_LANGUE` (`id_parametre` ASC) ;
-
-CREATE INDEX `fk_USER_PARAMETRES_LANGUE_LANGUES_REf1_idx` ON `poplitic_db`.`USER_PARAMETRES_LANGUE` (`id_langue` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`QUESTION_CHOIX_GEO`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`QUESTION_CHOIX_GEO` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTION_CHOIX_GEO` (
-  `id_question_choix_geo` INT NOT NULL AUTO_INCREMENT,
-  `id_question` INT(11) NOT NULL,
-  `id_ville` INT NULL,
-  `id_pays` INT NULL,
-  `id_dept` INT NULL,
-  PRIMARY KEY (`id_question_choix_geo`),
-  CONSTRAINT `fk_USERS_CHOIX_GEO_VILLE_REF10`
-    FOREIGN KEY (`id_ville`)
-    REFERENCES `poplitic_db`.`VILLE_REF` (`id_ville`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USERS_CHOIX_GEO_PAYS_REF10`
-    FOREIGN KEY (`id_pays`)
-    REFERENCES `poplitic_db`.`PAYS_REF` (`id_pays`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USERS_CHOIX_GEO_DEPT_REF10`
-    FOREIGN KEY (`id_dept`)
-    REFERENCES `poplitic_db`.`DEPT_REF` (`id_dept`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_QUESTION_CHOIX_GEO_POP_QUESTIONS1`
-    FOREIGN KEY (`id_question`)
-    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_USERS_CHOIX_GEO_VILLE_REF1_idx` ON `poplitic_db`.`QUESTION_CHOIX_GEO` (`id_ville` ASC) ;
-
-CREATE INDEX `fk_USERS_CHOIX_GEO_PAYS_REF1_idx` ON `poplitic_db`.`QUESTION_CHOIX_GEO` (`id_pays` ASC) ;
-
-CREATE INDEX `fk_USERS_CHOIX_GEO_DEPT_REF1_idx` ON `poplitic_db`.`QUESTION_CHOIX_GEO` (`id_dept` ASC) ;
-
-CREATE INDEX `fk_QUESTION_CHOIX_GEO_POP_QUESTIONS1_idx` ON `poplitic_db`.`QUESTION_CHOIX_GEO` (`id_question` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`QUESTION_INTERETS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`QUESTION_INTERETS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTION_INTERETS` (
-  `id_question` INT(11) NOT NULL,
-  `id_interet` INT NOT NULL,
-  `priorite` INT NULL,
-  PRIMARY KEY (`id_question`, `id_interet`),
-  CONSTRAINT `fk_USERS_has_USER_INTERETS_REF_USER_INTERETS_REF10`
-    FOREIGN KEY (`id_interet`)
-    REFERENCES `poplitic_db`.`USER_INTERETS_REF` (`id_interet`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_USER_INTERETS_copy1_POP_QUESTIONS1`
-    FOREIGN KEY (`id_question`)
-    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_POP_USERS_has_USER_INTERETS_REF_USER_INTERETS_REF1_idx` ON `poplitic_db`.`QUESTION_INTERETS` (`id_interet` ASC) ;
-
-CREATE INDEX `fk_USER_INTERETS_copy1_POP_QUESTIONS1_idx` ON `poplitic_db`.`QUESTION_INTERETS` (`id_question` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`QUESTION_COMMENTS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`QUESTION_COMMENTS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTION_COMMENTS` (
-  `id_comment` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_question` INT(11) NOT NULL,
-  `id_user` INT(11) NOT NULL,
-  `id_parent_comment` INT(11) NULL,
-  `contenu` TEXT NOT NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_comment`),
-  CONSTRAINT `fk_QUESTION_COMMENTS_QUESTIONS`
-    FOREIGN KEY (`id_question`)
-    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_QUESTION_COMMENTS_USERS`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_QUESTION_COMMENTS_PARENT`
-    FOREIGN KEY (`id_parent_comment`)
-    REFERENCES `poplitic_db`.`QUESTION_COMMENTS` (`id_comment`)
-    ON DELETE SET NULL
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_QUESTION_COMMENTS_QUESTIONS_idx` ON `poplitic_db`.`QUESTION_COMMENTS` (`id_question` ASC) ;
-CREATE INDEX `fk_QUESTION_COMMENTS_USERS_idx` ON `poplitic_db`.`QUESTION_COMMENTS` (`id_user` ASC) ;
-CREATE INDEX `fk_QUESTION_COMMENTS_PARENT_idx` ON `poplitic_db`.`QUESTION_COMMENTS` (`id_parent_comment` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`QUESTION_MEETINGS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`QUESTION_MEETINGS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTION_MEETINGS` (
-  `id_meeting` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_question` INT(11) NOT NULL,
-  `id_user` INT(11) NOT NULL,
-  `type_meeting` VARCHAR(20) NOT NULL,
-  `titre` VARCHAR(255) NULL,
-  `description` TEXT NULL,
-  `lieu` VARCHAR(255) NULL,
-  `url` TEXT NULL,
-  `date_debut` DATETIME NULL,
-  `date_fin` DATETIME NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_meeting`),
-  CONSTRAINT `fk_QUESTION_MEETINGS_QUESTIONS`
-    FOREIGN KEY (`id_question`)
-    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_QUESTION_MEETINGS_USERS`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_QUESTION_MEETINGS_QUESTIONS_idx` ON `poplitic_db`.`QUESTION_MEETINGS` (`id_question` ASC) ;
-CREATE INDEX `fk_QUESTION_MEETINGS_USERS_idx` ON `poplitic_db`.`QUESTION_MEETINGS` (`id_user` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`BUDGETS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`BUDGETS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGETS` (
-  `id_budget` INT(11) NOT NULL AUTO_INCREMENT,
-  `niveau` VARCHAR(20) NOT NULL,
-  `code_territoire` VARCHAR(45) NOT NULL,
-  `libelle_territoire` VARCHAR(255) NULL,
-  `annee` INT NULL,
-  `montant_total` DECIMAL(15,2) NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_budget`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `idx_BUDGETS_TERRITOIRE` ON `poplitic_db`.`BUDGETS` (`niveau` ASC, `code_territoire` ASC, `annee` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`BUDGET_POSTES`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`BUDGET_POSTES` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGET_POSTES` (
-  `id_budget_poste` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_budget` INT(11) NOT NULL,
-  `code` VARCHAR(45) NULL,
-  `libelle` VARCHAR(255) NULL,
-  `description` TEXT NULL,
-  `montant_actuel` DECIMAL(15,2) NULL,
-  PRIMARY KEY (`id_budget_poste`),
-  CONSTRAINT `fk_BUDGET_POSTES_BUDGETS`
-    FOREIGN KEY (`id_budget`)
-    REFERENCES `poplitic_db`.`BUDGETS` (`id_budget`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_BUDGET_POSTES_BUDGETS_idx` ON `poplitic_db`.`BUDGET_POSTES` (`id_budget` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`BUDGET_IMPACTS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`BUDGET_IMPACTS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGET_IMPACTS` (
-  `id_budget_impact` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_budget_poste` INT(11) NOT NULL,
-  `sens` VARCHAR(20) NOT NULL,
-  `libelle` VARCHAR(255) NULL,
-  `description` TEXT NULL,
-  `seuil_pourcentage` DECIMAL(7,2) NULL,
-  PRIMARY KEY (`id_budget_impact`),
-  CONSTRAINT `fk_BUDGET_IMPACTS_BUDGET_POSTES`
-    FOREIGN KEY (`id_budget_poste`)
-    REFERENCES `poplitic_db`.`BUDGET_POSTES` (`id_budget_poste`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_BUDGET_IMPACTS_BUDGET_POSTES_idx` ON `poplitic_db`.`BUDGET_IMPACTS` (`id_budget_poste` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`BUDGET_CHOIX`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`BUDGET_CHOIX` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGET_CHOIX` (
-  `id_budget_choix` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_budget` INT(11) NOT NULL,
-  `id_user` INT(11) NOT NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_budget_choix`),
-  CONSTRAINT `fk_BUDGET_CHOIX_BUDGETS`
-    FOREIGN KEY (`id_budget`)
-    REFERENCES `poplitic_db`.`BUDGETS` (`id_budget`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_BUDGET_CHOIX_USERS`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE UNIQUE INDEX `idx_BUDGET_CHOIX_USER` ON `poplitic_db`.`BUDGET_CHOIX` (`id_budget` ASC, `id_user` ASC) ;
-CREATE INDEX `fk_BUDGET_CHOIX_USERS_idx` ON `poplitic_db`.`BUDGET_CHOIX` (`id_user` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`BUDGET_CHOIX_POSTES`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`BUDGET_CHOIX_POSTES` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`BUDGET_CHOIX_POSTES` (
-  `id_budget_choix_poste` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_budget_choix` INT(11) NOT NULL,
-  `id_budget_poste` INT(11) NOT NULL,
-  `montant` DECIMAL(15,2) NULL,
-  PRIMARY KEY (`id_budget_choix_poste`),
-  CONSTRAINT `fk_BUDGET_CHOIX_POSTES_BUDGET_CHOIX`
-    FOREIGN KEY (`id_budget_choix`)
-    REFERENCES `poplitic_db`.`BUDGET_CHOIX` (`id_budget_choix`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_BUDGET_CHOIX_POSTES_BUDGET_POSTES`
-    FOREIGN KEY (`id_budget_poste`)
-    REFERENCES `poplitic_db`.`BUDGET_POSTES` (`id_budget_poste`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_BUDGET_CHOIX_POSTES_BUDGET_CHOIX_idx` ON `poplitic_db`.`BUDGET_CHOIX_POSTES` (`id_budget_choix` ASC) ;
-CREATE INDEX `fk_BUDGET_CHOIX_POSTES_BUDGET_POSTES_idx` ON `poplitic_db`.`BUDGET_CHOIX_POSTES` (`id_budget_poste` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`ACTUALITES`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`ACTUALITES` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`ACTUALITES` (
-  `id_actualite` INT(11) NOT NULL AUTO_INCREMENT,
-  `source` VARCHAR(255) NULL,
-  `titre` VARCHAR(255) NOT NULL,
-  `resume` TEXT NULL,
-  `url` TEXT NULL,
-  `date_publication` DATETIME NULL,
-  `date_creation` DATETIME NULL,
-  PRIMARY KEY (`id_actualite`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `idx_ACTUALITES_DATE_PUBLICATION` ON `poplitic_db`.`ACTUALITES` (`date_publication` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`QUESTION_SUGGESTIONS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`QUESTION_SUGGESTIONS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`QUESTION_SUGGESTIONS` (
-  `id_question_suggestion` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_actualite` INT(11) NOT NULL,
-  `id_question` INT(11) NULL,
-  `statut` VARCHAR(45) NULL,
-  `titre` VARCHAR(255) NULL,
-  `description` TEXT NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_question_suggestion`),
-  CONSTRAINT `fk_QUESTION_SUGGESTIONS_ACTUALITES`
-    FOREIGN KEY (`id_actualite`)
-    REFERENCES `poplitic_db`.`ACTUALITES` (`id_actualite`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_QUESTION_SUGGESTIONS_QUESTIONS`
-    FOREIGN KEY (`id_question`)
-    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_QUESTION_SUGGESTIONS_ACTUALITES_idx` ON `poplitic_db`.`QUESTION_SUGGESTIONS` (`id_actualite` ASC) ;
-CREATE INDEX `fk_QUESTION_SUGGESTIONS_QUESTIONS_idx` ON `poplitic_db`.`QUESTION_SUGGESTIONS` (`id_question` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`LOIS`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`LOIS` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`LOIS` (
-  `id_loi` INT(11) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(45) NULL,
-  `titre` VARCHAR(255) NULL,
-  `contenu` TEXT NULL,
-  `source` VARCHAR(255) NULL,
-  `date_publication` DATETIME NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_loi`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `idx_LOIS_CODE` ON `poplitic_db`.`LOIS` (`code` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`LOI_INCOHERENCES`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`LOI_INCOHERENCES` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`LOI_INCOHERENCES` (
-  `id_loi_incoherence` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_loi` INT(11) NOT NULL,
-  `id_loi_reference` INT(11) NOT NULL,
-  `description` TEXT NULL,
-  `correction_proposee` TEXT NULL,
-  `statut` VARCHAR(45) NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_loi_incoherence`),
-  CONSTRAINT `fk_LOI_INCOHERENCES_LOIS`
-    FOREIGN KEY (`id_loi`)
-    REFERENCES `poplitic_db`.`LOIS` (`id_loi`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_LOI_INCOHERENCES_LOIS_REF`
-    FOREIGN KEY (`id_loi_reference`)
-    REFERENCES `poplitic_db`.`LOIS` (`id_loi`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_LOI_INCOHERENCES_LOIS_idx` ON `poplitic_db`.`LOI_INCOHERENCES` (`id_loi` ASC) ;
-CREATE INDEX `fk_LOI_INCOHERENCES_LOIS_REF_idx` ON `poplitic_db`.`LOI_INCOHERENCES` (`id_loi_reference` ASC) ;
-
-
--- -----------------------------------------------------
--- Table `poplitic_db`.`PROPOSITIONS_LOI`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `poplitic_db`.`PROPOSITIONS_LOI` ;
-
-CREATE TABLE IF NOT EXISTS `poplitic_db`.`PROPOSITIONS_LOI` (
-  `id_proposition_loi` INT(11) NOT NULL AUTO_INCREMENT,
-  `id_question` INT(11) NOT NULL,
-  `id_user` INT(11) NOT NULL,
-  `titre` VARCHAR(255) NULL,
-  `expose_motifs` TEXT NULL,
-  `dispositif` TEXT NULL,
-  `analyse_conformite` TEXT NULL,
-  `statut` VARCHAR(45) NULL,
-  `date_creation` DATETIME NULL,
-  `date_modification` DATETIME NULL,
-  PRIMARY KEY (`id_proposition_loi`),
-  CONSTRAINT `fk_PROPOSITIONS_LOI_QUESTIONS`
-    FOREIGN KEY (`id_question`)
-    REFERENCES `poplitic_db`.`QUESTIONS` (`id_question`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_PROPOSITIONS_LOI_USERS`
-    FOREIGN KEY (`id_user`)
-    REFERENCES `poplitic_db`.`USERS` (`id_user`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = latin1;
-
-CREATE INDEX `fk_PROPOSITIONS_LOI_QUESTIONS_idx` ON `poplitic_db`.`PROPOSITIONS_LOI` (`id_question` ASC) ;
-CREATE INDEX `fk_PROPOSITIONS_LOI_USERS_idx` ON `poplitic_db`.`PROPOSITIONS_LOI` (`id_user` ASC) ;
-
-USE `poplitic_db`;
-
-DELIMITER $$
-
-USE `poplitic_db`$$
-DROP TRIGGER IF EXISTS `poplitic_db`.`USERS_BEFORE_INSERT` $$
-USE `poplitic_db`$$
-CREATE
-DEFINER = CURRENT_USER
-TRIGGER `poplitic_db`.`USERS_BEFORE_INSERT`
-BEFORE INSERT ON `poplitic_db`.`USERS`
-FOR EACH ROW
+-- PostgreSQL schema for poplitic (migrated from MySQL Workbench export).
+-- The application runs with Hibernate ddl-auto=update, which creates/updates the
+-- tables from the JPA entities at boot. This script is the source of truth for the
+-- schema and the triggers (Hibernate does NOT manage triggers). Table/column names
+-- are unquoted -> PostgreSQL folds them to lower case, matching what Hibernate emits.
+
+-- -----------------------------------------------------
+-- Reference tables (no FK)
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS ANSWER_REF (
+  id_answer SERIAL PRIMARY KEY,
+  code VARCHAR(45) DEFAULT NULL,
+  libelle VARCHAR(256) DEFAULT NULL
+);
+
+CREATE TABLE IF NOT EXISTS STATUT_REF (
+  id_statut SERIAL PRIMARY KEY,
+  code VARCHAR(45) DEFAULT NULL,
+  libelle VARCHAR(256) DEFAULT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ROLES (
+  id_role SERIAL PRIMARY KEY,
+  code VARCHAR(45) DEFAULT NULL,
+  libelle VARCHAR(255) DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS code_UNIQUE_ROLES ON ROLES (code);
+
+CREATE TABLE IF NOT EXISTS USER_PARAMETRES (
+  id_parametre SERIAL PRIMARY KEY,
+  notifications SMALLINT NOT NULL DEFAULT 0,
+  anonymat SMALLINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS USER_POSITION (
+  id_position SERIAL PRIMARY KEY,
+  latitude REAL DEFAULT NULL,
+  longitude REAL DEFAULT NULL
+);
+
+CREATE TABLE IF NOT EXISTS PAYS_REF (
+  id_pays SERIAL PRIMARY KEY,
+  code VARCHAR(45),
+  libelle VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS DEPT_REF (
+  id_dept SERIAL PRIMARY KEY,
+  id_pays INT NOT NULL,
+  code VARCHAR(45),
+  libelle VARCHAR(255),
+  CONSTRAINT fk_DEPT_REF_PAYS_REF1 FOREIGN KEY (id_pays) REFERENCES PAYS_REF (id_pays)
+);
+CREATE INDEX IF NOT EXISTS fk_DEPT_REF_PAYS_REF1_idx ON DEPT_REF (id_pays);
+
+CREATE TABLE IF NOT EXISTS VILLE_REF (
+  id_ville SERIAL PRIMARY KEY,
+  id_dept INT NOT NULL,
+  code VARCHAR(45),
+  libelle VARCHAR(255),
+  CONSTRAINT fk_VILLE_REF_DEPT_REF1 FOREIGN KEY (id_dept) REFERENCES DEPT_REF (id_dept)
+);
+CREATE INDEX IF NOT EXISTS fk_VILLE_REF_DEPT_REF1_idx ON VILLE_REF (id_dept);
+
+CREATE TABLE IF NOT EXISTS LANGUES_REF (
+  id_langue SERIAL PRIMARY KEY,
+  code VARCHAR(45),
+  libelle VARCHAR(255)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS code_UNIQUE_LANGUES ON LANGUES_REF (code);
+
+CREATE TABLE IF NOT EXISTS USER_INTERETS_REF (
+  id_interet SERIAL PRIMARY KEY,
+  code VARCHAR(45) NOT NULL,
+  libelle VARCHAR(255) NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS code_UNIQUE_USER_INTERETS_REF ON USER_INTERETS_REF (code);
+
+-- -----------------------------------------------------
+-- USERS and dependents
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS USERS (
+  id_user SERIAL,
+  id_role INT NOT NULL,
+  id_parametre INT NOT NULL,
+  id_position INT NOT NULL,
+  login VARCHAR(45) NOT NULL,
+  nom VARCHAR(45) DEFAULT NULL,
+  prenom VARCHAR(45) DEFAULT NULL,
+  genre VARCHAR(45) DEFAULT NULL,
+  email VARCHAR(255) NOT NULL,
+  numero_electeur VARCHAR(45),
+  password VARCHAR(100) NOT NULL,
+  actif SMALLINT DEFAULT NULL,
+  date_creation TIMESTAMP DEFAULT NULL,
+  date_modification TIMESTAMP DEFAULT NULL,
+  date_suppression TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (id_user, id_role, id_parametre, id_position),
+  CONSTRAINT fk_USERS_ROLES1 FOREIGN KEY (id_role) REFERENCES ROLES (id_role),
+  CONSTRAINT fk_USERS_USER_PARAMETERS1 FOREIGN KEY (id_parametre) REFERENCES USER_PARAMETRES (id_parametre),
+  CONSTRAINT fk_USERS_USER_POSITION1 FOREIGN KEY (id_position) REFERENCES USER_POSITION (id_position)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS id_user_UNIQUE ON USERS (id_user);
+CREATE UNIQUE INDEX IF NOT EXISTS login_UNIQUE ON USERS (login);
+CREATE UNIQUE INDEX IF NOT EXISTS email_UNIQUE ON USERS (email);
+CREATE INDEX IF NOT EXISTS fk_USERS_USER_POSITION1_idx ON USERS (id_position);
+
+CREATE TABLE IF NOT EXISTS USER_ADRESSE (
+  id_adresse SERIAL,
+  id_user INT NOT NULL,
+  rue VARCHAR(45) DEFAULT NULL,
+  complement VARCHAR(45) DEFAULT NULL,
+  ville VARCHAR(45) DEFAULT NULL,
+  codepostal VARCHAR(45) DEFAULT NULL,
+  pays VARCHAR(45) DEFAULT NULL,
+  telephone VARCHAR(45),
+  PRIMARY KEY (id_adresse, id_user),
+  CONSTRAINT fk_USER_ADRESSE_USERS FOREIGN KEY (id_user) REFERENCES USERS (id_user)
+);
+
+CREATE TABLE IF NOT EXISTS USER_INTERETS (
+  id_user INT NOT NULL,
+  id_interet INT NOT NULL,
+  priorite INT,
+  PRIMARY KEY (id_user, id_interet),
+  CONSTRAINT fk_USERS_USER_INTERETS_REF_USERS1 FOREIGN KEY (id_user) REFERENCES USERS (id_user),
+  CONSTRAINT fk_USERS_has_USER_INTERETS_REF_USER_INTERETS_REF1 FOREIGN KEY (id_interet) REFERENCES USER_INTERETS_REF (id_interet)
+);
+CREATE INDEX IF NOT EXISTS fk_USER_INTERETS_interet_idx ON USER_INTERETS (id_interet);
+CREATE INDEX IF NOT EXISTS fk_USER_INTERETS_user_idx ON USER_INTERETS (id_user);
+
+CREATE TABLE IF NOT EXISTS USER_CHOIX_GEO (
+  id_user INT NOT NULL,
+  id_ville INT,
+  id_pays INT,
+  id_dept INT,
+  USER_CHOIX_GEOcol VARCHAR(45) NOT NULL,
+  PRIMARY KEY (id_user, USER_CHOIX_GEOcol),
+  CONSTRAINT fk_USERS_has_VILLE_REF_USERS1 FOREIGN KEY (id_user) REFERENCES USERS (id_user),
+  CONSTRAINT fk_USERS_CHOIX_GEO_VILLE_REF1 FOREIGN KEY (id_ville) REFERENCES VILLE_REF (id_ville),
+  CONSTRAINT fk_USERS_CHOIX_GEO_PAYS_REF1 FOREIGN KEY (id_pays) REFERENCES PAYS_REF (id_pays),
+  CONSTRAINT fk_USERS_CHOIX_GEO_DEPT_REF1 FOREIGN KEY (id_dept) REFERENCES DEPT_REF (id_dept)
+);
+CREATE INDEX IF NOT EXISTS fk_UCG_user_idx ON USER_CHOIX_GEO (id_user);
+CREATE INDEX IF NOT EXISTS fk_UCG_ville_idx ON USER_CHOIX_GEO (id_ville);
+CREATE INDEX IF NOT EXISTS fk_UCG_pays_idx ON USER_CHOIX_GEO (id_pays);
+CREATE INDEX IF NOT EXISTS fk_UCG_dept_idx ON USER_CHOIX_GEO (id_dept);
+
+CREATE TABLE IF NOT EXISTS USER_PARAMETRES_LANGUE (
+  id_parametre INT NOT NULL,
+  id_langue INT NOT NULL,
+  ordre INT,
+  PRIMARY KEY (id_parametre, id_langue),
+  CONSTRAINT fk_UPL_PARAMETRES1 FOREIGN KEY (id_parametre) REFERENCES USER_PARAMETRES (id_parametre),
+  CONSTRAINT fk_UPL_LANGUES1 FOREIGN KEY (id_langue) REFERENCES LANGUES_REF (id_langue)
+);
+CREATE INDEX IF NOT EXISTS fk_UPL_parametre_idx ON USER_PARAMETRES_LANGUE (id_parametre);
+CREATE INDEX IF NOT EXISTS fk_UPL_langue_idx ON USER_PARAMETRES_LANGUE (id_langue);
+
+-- -----------------------------------------------------
+-- QUESTIONS and dependents
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS QUESTIONS (
+  id_question SERIAL,
+  id_user INT NOT NULL,
+  id_statut INT NOT NULL,
+  code VARCHAR(45) DEFAULT NULL,
+  libelle VARCHAR(255) DEFAULT NULL,
+  description TEXT DEFAULT NULL,
+  image TEXT DEFAULT NULL,
+  forwards INT,
+  date_creation TIMESTAMP DEFAULT NULL,
+  date_modification TIMESTAMP DEFAULT NULL,
+  date_expiration TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (id_question, id_user, id_statut),
+  CONSTRAINT fk_QUESTIONS_STATUT_REF1 FOREIGN KEY (id_statut) REFERENCES STATUT_REF (id_statut),
+  CONSTRAINT fk_QUESTIONS_USERS1 FOREIGN KEY (id_user) REFERENCES USERS (id_user)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS id_question_UNIQUE ON QUESTIONS (id_question);
+CREATE INDEX IF NOT EXISTS fk_QUESTIONS_statut_idx ON QUESTIONS (id_statut);
+CREATE INDEX IF NOT EXISTS fk_QUESTIONS_user_idx ON QUESTIONS (id_user);
+
+CREATE TABLE IF NOT EXISTS QUESTIONS_STAT (
+  id_questions_stat SERIAL,
+  id_question INT NOT NULL,
+  id_answer INT NOT NULL,
+  id_user INT NOT NULL,
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP,
+  PRIMARY KEY (id_questions_stat, id_question, id_answer, id_user),
+  CONSTRAINT fk_QS_ANSWER_REF1 FOREIGN KEY (id_answer) REFERENCES ANSWER_REF (id_answer),
+  CONSTRAINT fk_QS_QUESTIONS1 FOREIGN KEY (id_question) REFERENCES QUESTIONS (id_question),
+  CONSTRAINT fk_QS_USERS1 FOREIGN KEY (id_user) REFERENCES USERS (id_user)
+);
+CREATE INDEX IF NOT EXISTS fk_QS_question_idx ON QUESTIONS_STAT (id_question);
+CREATE INDEX IF NOT EXISTS fk_QS_answer_idx ON QUESTIONS_STAT (id_answer);
+CREATE INDEX IF NOT EXISTS fk_QS_user_idx ON QUESTIONS_STAT (id_user);
+
+CREATE TABLE IF NOT EXISTS QUESTION_CHOIX_GEO (
+  id_question_choix_geo SERIAL PRIMARY KEY,
+  id_question INT NOT NULL,
+  id_ville INT,
+  id_pays INT,
+  id_dept INT,
+  CONSTRAINT fk_QCG_VILLE_REF FOREIGN KEY (id_ville) REFERENCES VILLE_REF (id_ville),
+  CONSTRAINT fk_QCG_PAYS_REF FOREIGN KEY (id_pays) REFERENCES PAYS_REF (id_pays),
+  CONSTRAINT fk_QCG_DEPT_REF FOREIGN KEY (id_dept) REFERENCES DEPT_REF (id_dept),
+  CONSTRAINT fk_QCG_QUESTIONS FOREIGN KEY (id_question) REFERENCES QUESTIONS (id_question)
+);
+CREATE INDEX IF NOT EXISTS fk_QCG_ville_idx ON QUESTION_CHOIX_GEO (id_ville);
+CREATE INDEX IF NOT EXISTS fk_QCG_pays_idx ON QUESTION_CHOIX_GEO (id_pays);
+CREATE INDEX IF NOT EXISTS fk_QCG_dept_idx ON QUESTION_CHOIX_GEO (id_dept);
+CREATE INDEX IF NOT EXISTS fk_QCG_question_idx ON QUESTION_CHOIX_GEO (id_question);
+
+CREATE TABLE IF NOT EXISTS QUESTION_INTERETS (
+  id_question INT NOT NULL,
+  id_interet INT NOT NULL,
+  priorite INT,
+  PRIMARY KEY (id_question, id_interet),
+  CONSTRAINT fk_QI_INTERETS_REF FOREIGN KEY (id_interet) REFERENCES USER_INTERETS_REF (id_interet),
+  CONSTRAINT fk_QI_QUESTIONS FOREIGN KEY (id_question) REFERENCES QUESTIONS (id_question)
+);
+CREATE INDEX IF NOT EXISTS fk_QI_interet_idx ON QUESTION_INTERETS (id_interet);
+CREATE INDEX IF NOT EXISTS fk_QI_question_idx ON QUESTION_INTERETS (id_question);
+
+CREATE TABLE IF NOT EXISTS QUESTION_COMMENTS (
+  id_comment SERIAL PRIMARY KEY,
+  id_question INT NOT NULL,
+  id_user INT NOT NULL,
+  id_parent_comment INT,
+  contenu TEXT NOT NULL,
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP,
+  CONSTRAINT fk_QC_QUESTIONS FOREIGN KEY (id_question) REFERENCES QUESTIONS (id_question),
+  CONSTRAINT fk_QC_USERS FOREIGN KEY (id_user) REFERENCES USERS (id_user),
+  CONSTRAINT fk_QC_PARENT FOREIGN KEY (id_parent_comment) REFERENCES QUESTION_COMMENTS (id_comment) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS fk_QC_question_idx ON QUESTION_COMMENTS (id_question);
+CREATE INDEX IF NOT EXISTS fk_QC_user_idx ON QUESTION_COMMENTS (id_user);
+CREATE INDEX IF NOT EXISTS fk_QC_parent_idx ON QUESTION_COMMENTS (id_parent_comment);
+
+CREATE TABLE IF NOT EXISTS QUESTION_MEETINGS (
+  id_meeting SERIAL PRIMARY KEY,
+  id_question INT NOT NULL,
+  id_user INT NOT NULL,
+  type_meeting VARCHAR(20) NOT NULL,
+  titre VARCHAR(255),
+  description TEXT,
+  lieu VARCHAR(255),
+  url TEXT,
+  date_debut TIMESTAMP,
+  date_fin TIMESTAMP,
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP,
+  CONSTRAINT fk_QM_QUESTIONS FOREIGN KEY (id_question) REFERENCES QUESTIONS (id_question),
+  CONSTRAINT fk_QM_USERS FOREIGN KEY (id_user) REFERENCES USERS (id_user)
+);
+CREATE INDEX IF NOT EXISTS fk_QM_question_idx ON QUESTION_MEETINGS (id_question);
+CREATE INDEX IF NOT EXISTS fk_QM_user_idx ON QUESTION_MEETINGS (id_user);
+
+-- -----------------------------------------------------
+-- BUDGETS
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS BUDGETS (
+  id_budget SERIAL PRIMARY KEY,
+  niveau VARCHAR(20) NOT NULL,
+  code_territoire VARCHAR(45) NOT NULL,
+  libelle_territoire VARCHAR(255),
+  annee INT,
+  montant_total NUMERIC(15,2),
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_BUDGETS_TERRITOIRE ON BUDGETS (niveau, code_territoire, annee);
+
+CREATE TABLE IF NOT EXISTS BUDGET_POSTES (
+  id_budget_poste SERIAL PRIMARY KEY,
+  id_budget INT NOT NULL,
+  code VARCHAR(45),
+  libelle VARCHAR(255),
+  description TEXT,
+  montant_actuel NUMERIC(15,2),
+  CONSTRAINT fk_BP_BUDGETS FOREIGN KEY (id_budget) REFERENCES BUDGETS (id_budget)
+);
+CREATE INDEX IF NOT EXISTS fk_BP_budget_idx ON BUDGET_POSTES (id_budget);
+
+CREATE TABLE IF NOT EXISTS BUDGET_IMPACTS (
+  id_budget_impact SERIAL PRIMARY KEY,
+  id_budget_poste INT NOT NULL,
+  sens VARCHAR(20) NOT NULL,
+  libelle VARCHAR(255),
+  description TEXT,
+  seuil_pourcentage NUMERIC(7,2),
+  CONSTRAINT fk_BI_BUDGET_POSTES FOREIGN KEY (id_budget_poste) REFERENCES BUDGET_POSTES (id_budget_poste)
+);
+CREATE INDEX IF NOT EXISTS fk_BI_poste_idx ON BUDGET_IMPACTS (id_budget_poste);
+
+CREATE TABLE IF NOT EXISTS BUDGET_CHOIX (
+  id_budget_choix SERIAL PRIMARY KEY,
+  id_budget INT NOT NULL,
+  id_user INT NOT NULL,
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP,
+  CONSTRAINT fk_BC_BUDGETS FOREIGN KEY (id_budget) REFERENCES BUDGETS (id_budget),
+  CONSTRAINT fk_BC_USERS FOREIGN KEY (id_user) REFERENCES USERS (id_user)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_BUDGET_CHOIX_USER ON BUDGET_CHOIX (id_budget, id_user);
+CREATE INDEX IF NOT EXISTS fk_BC_user_idx ON BUDGET_CHOIX (id_user);
+
+CREATE TABLE IF NOT EXISTS BUDGET_CHOIX_POSTES (
+  id_budget_choix_poste SERIAL PRIMARY KEY,
+  id_budget_choix INT NOT NULL,
+  id_budget_poste INT NOT NULL,
+  montant NUMERIC(15,2),
+  CONSTRAINT fk_BCP_BUDGET_CHOIX FOREIGN KEY (id_budget_choix) REFERENCES BUDGET_CHOIX (id_budget_choix),
+  CONSTRAINT fk_BCP_BUDGET_POSTES FOREIGN KEY (id_budget_poste) REFERENCES BUDGET_POSTES (id_budget_poste)
+);
+CREATE INDEX IF NOT EXISTS fk_BCP_choix_idx ON BUDGET_CHOIX_POSTES (id_budget_choix);
+CREATE INDEX IF NOT EXISTS fk_BCP_poste_idx ON BUDGET_CHOIX_POSTES (id_budget_poste);
+
+-- -----------------------------------------------------
+-- ACTUALITES / LOIS / PROPOSITIONS
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS ACTUALITES (
+  id_actualite SERIAL PRIMARY KEY,
+  source VARCHAR(255),
+  titre VARCHAR(255) NOT NULL,
+  resume TEXT,
+  url TEXT,
+  date_publication TIMESTAMP,
+  date_creation TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_ACTUALITES_DATE_PUBLICATION ON ACTUALITES (date_publication);
+
+CREATE TABLE IF NOT EXISTS QUESTION_SUGGESTIONS (
+  id_question_suggestion SERIAL PRIMARY KEY,
+  id_actualite INT NOT NULL,
+  id_question INT,
+  statut VARCHAR(45),
+  titre VARCHAR(255),
+  description TEXT,
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP,
+  CONSTRAINT fk_QSUG_ACTUALITES FOREIGN KEY (id_actualite) REFERENCES ACTUALITES (id_actualite),
+  CONSTRAINT fk_QSUG_QUESTIONS FOREIGN KEY (id_question) REFERENCES QUESTIONS (id_question)
+);
+CREATE INDEX IF NOT EXISTS fk_QSUG_actualite_idx ON QUESTION_SUGGESTIONS (id_actualite);
+CREATE INDEX IF NOT EXISTS fk_QSUG_question_idx ON QUESTION_SUGGESTIONS (id_question);
+
+CREATE TABLE IF NOT EXISTS LOIS (
+  id_loi SERIAL PRIMARY KEY,
+  code VARCHAR(45),
+  titre VARCHAR(255),
+  contenu TEXT,
+  source VARCHAR(255),
+  date_publication TIMESTAMP,
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_LOIS_CODE ON LOIS (code);
+
+CREATE TABLE IF NOT EXISTS LOI_INCOHERENCES (
+  id_loi_incoherence SERIAL PRIMARY KEY,
+  id_loi INT NOT NULL,
+  id_loi_reference INT NOT NULL,
+  description TEXT,
+  correction_proposee TEXT,
+  statut VARCHAR(45),
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP,
+  CONSTRAINT fk_LI_LOIS FOREIGN KEY (id_loi) REFERENCES LOIS (id_loi),
+  CONSTRAINT fk_LI_LOIS_REF FOREIGN KEY (id_loi_reference) REFERENCES LOIS (id_loi)
+);
+CREATE INDEX IF NOT EXISTS fk_LI_loi_idx ON LOI_INCOHERENCES (id_loi);
+CREATE INDEX IF NOT EXISTS fk_LI_loiref_idx ON LOI_INCOHERENCES (id_loi_reference);
+
+CREATE TABLE IF NOT EXISTS PROPOSITIONS_LOI (
+  id_proposition_loi SERIAL PRIMARY KEY,
+  id_question INT NOT NULL,
+  id_user INT NOT NULL,
+  titre VARCHAR(255),
+  expose_motifs TEXT,
+  dispositif TEXT,
+  analyse_conformite TEXT,
+  statut VARCHAR(45),
+  date_creation TIMESTAMP,
+  date_modification TIMESTAMP,
+  CONSTRAINT fk_PL_QUESTIONS FOREIGN KEY (id_question) REFERENCES QUESTIONS (id_question),
+  CONSTRAINT fk_PL_USERS FOREIGN KEY (id_user) REFERENCES USERS (id_user)
+);
+CREATE INDEX IF NOT EXISTS fk_PL_question_idx ON PROPOSITIONS_LOI (id_question);
+CREATE INDEX IF NOT EXISTS fk_PL_user_idx ON PROPOSITIONS_LOI (id_user);
+
+-- -----------------------------------------------------
+-- Triggers (ported from MySQL to PL/pgSQL).
+-- Hibernate does NOT manage these; run this section after the schema exists.
+-- -----------------------------------------------------
+CREATE OR REPLACE FUNCTION users_before_insert() RETURNS trigger AS $BODY$
+DECLARE
+  default_language_id INT;
+  new_parametre_id INT;
+  new_position_id INT;
 BEGIN
-	DECLARE default_language_id INT;
+  INSERT INTO USER_PARAMETRES DEFAULT VALUES RETURNING id_parametre INTO new_parametre_id;
+  NEW.id_parametre := new_parametre_id;
 
-	INSERT INTO `poplitic_db`.`USER_PARAMETRES` () VALUES ();
-    SET NEW.id_parametre = LAST_INSERT_id();
+  SELECT id_langue INTO default_language_id FROM LANGUES_REF WHERE code = 'FR' LIMIT 1;
+  IF default_language_id IS NOT NULL THEN
+    INSERT INTO USER_PARAMETRES_LANGUE (id_parametre, id_langue) VALUES (new_parametre_id, default_language_id);
+  END IF;
 
-    SELECT `id_langue`
-    INTO default_language_id
-    FROM `poplitic_db`.`LANGUES_REF`
-    WHERE `code` = 'FR'
-    LIMIT 1;
+  INSERT INTO USER_POSITION (latitude, longitude) VALUES (NULL, NULL) RETURNING id_position INTO new_position_id;
+  NEW.id_position := new_position_id;
 
-    INSERT INTO `poplitic_db`.`USER_PARAMETRES_LANGUE` (`id_parametre`, `id_langue`) VALUES (LAST_INSERT_id(), default_language_id);
-    
-    INSERT INTO `poplitic_db`.`USER_POSITION` (`latitude`, `longitude`) VALUES (null,null);
-    SET NEW.id_position = LAST_INSERT_id();
-    
-    SET NEW.date_creation = NOW();
-END$$
+  NEW.date_creation := NOW();
+  RETURN NEW;
+END;
+$BODY$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS USERS_BEFORE_INSERT ON USERS;
+CREATE TRIGGER USERS_BEFORE_INSERT BEFORE INSERT ON USERS FOR EACH ROW EXECUTE FUNCTION users_before_insert();
 
-USE `poplitic_db`$$
-DROP TRIGGER IF EXISTS `poplitic_db`.`USERS_AFTER_INSERT` $$
-USE `poplitic_db`$$
-CREATE
-DEFINER = CURRENT_USER
-TRIGGER `poplitic_db`.`USERS_AFTER_INSERT`
-AFTER INSERT ON `poplitic_db`.`USERS`
-FOR EACH ROW
+CREATE OR REPLACE FUNCTION users_after_insert() RETURNS trigger AS $BODY$
 BEGIN
-	INSERT INTO `poplitic_db`.`USER_ADRESSE` (id_user) VALUES (NEW.id_user);
-END$$
+  INSERT INTO USER_ADRESSE (id_user) VALUES (NEW.id_user);
+  RETURN NEW;
+END;
+$BODY$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS USERS_AFTER_INSERT ON USERS;
+CREATE TRIGGER USERS_AFTER_INSERT AFTER INSERT ON USERS FOR EACH ROW EXECUTE FUNCTION users_after_insert();
 
-USE `poplitic_db`$$
-DROP TRIGGER IF EXISTS `poplitic_db`.`USERS_BEFORE_UPDATE` $$
-USE `poplitic_db`$$
-CREATE
-DEFINER = CURRENT_USER
-TRIGGER `poplitic_db`.`USERS_BEFORE_UPDATE`
-BEFORE UPDATE ON `poplitic_db`.`USERS`
-FOR EACH ROW
+CREATE OR REPLACE FUNCTION set_date_modification() RETURNS trigger AS $BODY$
 BEGIN
-	SET NEW.date_modification = NOW();
-END$$
+  NEW.date_modification := NOW();
+  RETURN NEW;
+END;
+$BODY$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS USERS_BEFORE_UPDATE ON USERS;
+CREATE TRIGGER USERS_BEFORE_UPDATE BEFORE UPDATE ON USERS FOR EACH ROW EXECUTE FUNCTION set_date_modification();
 
-USE `poplitic_db`$$
-DROP TRIGGER IF EXISTS `poplitic_db`.`QUESTIONS_BEFORE_INSERT` $$
-USE `poplitic_db`$$
-CREATE
-DEFINER = CURRENT_USER
-TRIGGER `poplitic_db`.`QUESTIONS_BEFORE_INSERT`
-BEFORE INSERT ON `poplitic_db`.`QUESTIONS`
-FOR EACH ROW
+CREATE OR REPLACE FUNCTION set_date_creation() RETURNS trigger AS $BODY$
 BEGIN
-	SET NEW.date_creation = NOW();
-END$$
+  NEW.date_creation := NOW();
+  RETURN NEW;
+END;
+$BODY$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS QUESTIONS_BEFORE_INSERT ON QUESTIONS;
+CREATE TRIGGER QUESTIONS_BEFORE_INSERT BEFORE INSERT ON QUESTIONS FOR EACH ROW EXECUTE FUNCTION set_date_creation();
 
-USE `poplitic_db`$$
-DROP TRIGGER IF EXISTS `poplitic_db`.`QUESTIONS_BEFORE_UPDATE` $$
-USE `poplitic_db`$$
-CREATE
-DEFINER = CURRENT_USER
-TRIGGER `poplitic_db`.`QUESTIONS_BEFORE_UPDATE`
-BEFORE UPDATE ON `poplitic_db`.`QUESTIONS`
-FOR EACH ROW
-BEGIN
-	SET NEW.date_modification = NOW();
-END$$
+DROP TRIGGER IF EXISTS QUESTIONS_BEFORE_UPDATE ON QUESTIONS;
+CREATE TRIGGER QUESTIONS_BEFORE_UPDATE BEFORE UPDATE ON QUESTIONS FOR EACH ROW EXECUTE FUNCTION set_date_modification();
 
+DROP TRIGGER IF EXISTS QUESTIONS_STAT_BEFORE_INSERT ON QUESTIONS_STAT;
+CREATE TRIGGER QUESTIONS_STAT_BEFORE_INSERT BEFORE INSERT ON QUESTIONS_STAT FOR EACH ROW EXECUTE FUNCTION set_date_creation();
 
-USE `poplitic_db`$$
-DROP TRIGGER IF EXISTS `poplitic_db`.`QUESTIONS_STAT_BEFORE_INSERT` $$
-USE `poplitic_db`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `poplitic_db`.`QUESTIONS_STAT_BEFORE_INSERT` BEFORE INSERT ON `QUESTIONS_STAT` FOR EACH ROW
-BEGIN
-	SET NEW.date_creation = NOW();
-END$$
-
-
-USE `poplitic_db`$$
-DROP TRIGGER IF EXISTS `poplitic_db`.`QUESTIONS_STAT_BEFORE_UPDATE` $$
-USE `poplitic_db`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `poplitic_db`.`QUESTIONS_STAT_BEFORE_UPDATE` BEFORE UPDATE ON `QUESTIONS_STAT` FOR EACH ROW
-BEGIN
-	SET NEW.date_modification = NOW();
-END$$
-
-
-DELIMITER ;
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+DROP TRIGGER IF EXISTS QUESTIONS_STAT_BEFORE_UPDATE ON QUESTIONS_STAT;
+CREATE TRIGGER QUESTIONS_STAT_BEFORE_UPDATE BEFORE UPDATE ON QUESTIONS_STAT FOR EACH ROW EXECUTE FUNCTION set_date_modification();

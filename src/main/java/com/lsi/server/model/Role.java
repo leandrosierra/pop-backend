@@ -13,10 +13,10 @@ public class Role  {
 	@Column(name="id_role")
 	private int idRole;
 	
-	@Column(columnDefinition = "code", insertable = false, updatable = false)
+	@Column(name = "code", columnDefinition = "varchar(45)", insertable = false, updatable = false)
 	private String code;
 
-	@Column(columnDefinition = "libelle", insertable = false, updatable = false)
+	@Column(name = "libelle", columnDefinition = "varchar(255)", insertable = false, updatable = false)
 	private String libelle;
 
 	public Role() {
