@@ -5,9 +5,9 @@
 **L'API qui rend la voix aux citoyens.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Java](https://img.shields.io/badge/Java-8-orange.svg)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![MySQL](https://img.shields.io/badge/MySQL-5.x-4479A1.svg)](https://www.mysql.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-22-339933.svg)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4-000000.svg)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1.svg)](https://www.postgresql.org/)
 
 [Frontend mobile](https://github.com/leandrosierra/pop-mobile) · [Démo en ligne](https://pop.leandro-sierra.com) · [API live](https://api.pop.leandro-sierra.com)
 
@@ -24,7 +24,7 @@ Aujourd'hui, on confie un mandat de cinq ans à une poignée d'élus, et on trav
 
 POP est une plateforme de **démocratie semi-directe** : chacun peut **proposer une mesure**, en **débattre publiquement**, **lancer un référendum citoyen**, et **voter** sur les propositions des autres. Pas une pétition de plus — un véritable outil de délibération collective, pensé pour passer du défoulement Twitter à la décision argumentée.
 
-Ce dépôt contient le **backend** : l'API REST Spring Boot qui gère l'authentification, les questions, les votes, la géographie citoyenne et les centres d'intérêt. Le client mobile / web vit dans [`pop-mobile`](https://github.com/leandrosierra/pop-mobile).
+Ce dépôt contient le **backend** : l'API REST Node.js qui gère l'authentification, les questions, les votes, la géographie citoyenne et les centres d'intérêt. Le client mobile / web vit dans [`pop-mobile`](https://github.com/leandrosierra/pop-mobile).
 
 ## Pourquoi c'est open source
 
@@ -42,61 +42,62 @@ License : **MIT**. Utilise, modifie, redistribue. La seule chose qu'on demande :
 ```
 ┌─────────────────────┐         ┌──────────────────────────┐
 │   pop-mobile        │◄───────►│   pop-backend (CE REPO)  │
-│   Expo / RN / Web   │  HTTPS  │   Spring Boot · Java 8   │
+│   Expo / RN / Web   │  HTTPS  │   Node.js · Express      │
 └─────────────────────┘         └────────────┬─────────────┘
-                                             │ JPA / Hibernate
+                                             │ pg
                                              ▼
                                   ┌──────────────────────┐
-                                  │   MySQL 5.x          │
+                                  │   PostgreSQL         │
                                   │   (poplitic schema)  │
                                   └──────────────────────┘
 ```
 
 ### Stack
 
-- **Spring Boot 2.2** — packaging WAR, Tomcat embarqué ou externe
-- **Spring Data JPA + Hibernate** — accès données, naming strategy custom (tables en UPPER_CASE)
-- **Spring Security + JWT** (`com.auth0:java-jwt`) — auth stateless
-- **OAuth natifs** — Google · Apple · Facebook · Instagram (via `jwks-rsa` côté backend)
-- **MySQL 5.x** — schéma `poplitic` (cf. `SQL/DB_CREATION.sql`)
-- **Maven Wrapper** — `./mvnw` (Linux/Mac) ou `mvnw.cmd` (Windows), aucune install Maven globale requise
+- **Node.js 22** — runtime léger pour le serveur Coolify
+- **Express 4** — API HTTP
+- **pg** — accès PostgreSQL direct sur le schéma existant
+- **bcryptjs** — vérification des mots de passe historiques
+- **PostgreSQL** — schéma `pop` (cf. `SQL/DB_CREATION.sql`)
+- **Dockerfile** — image Node Alpine prête pour Coolify
 
 ### Endpoints (extrait)
 
 | Domaine | Route | Description |
 |---|---|---|
-| Auth | `POST /api/auth/login` | Email + password → JWT |
-| Auth | `POST /api/auth/oauth/{provider}` | Login OAuth natif (google/apple/facebook/instagram) |
-| Auth | `POST /api/auth/signup` | Création de compte |
-| Auth | `POST /api/auth/forgot-password` | Email de reset |
-| Civic | `GET /api/civic/questions` | Liste paginée des questions ouvertes |
-| Civic | `POST /api/civic/questions` | Proposer une question |
-| Civic | `POST /api/civic/questions/{id}/vote` | Voter |
-| Setup | `GET/POST /api/setup/geography` | Profil géographique citoyen |
-| Setup | `GET/POST /api/setup/interests` | Centres d'intérêt |
-| Admin | `*` | Backoffice modération |
+| Health | `GET /health` | Healthcheck Coolify |
+| Auth | `POST /user/login` | Email + password -> token |
+| Auth | `POST /user/create` | Création de compte |
+| Auth | `POST /user/oauth/login` | Endpoint OAuth réservé |
+| User | `GET /user/{id}` | Profil utilisateur |
+| Civic | `GET /question` | Liste paginée des questions |
+| Civic | `POST /question` | Proposer une question |
+| Civic | `GET /loi` | Lois et textes associés |
+| Budget | `GET /budget` | Données budget |
+| News | `GET /actualite` | Actualités |
+| Discussion | `GET /discussion` | Discussions |
 
-L'API complète est documentée par le code (annotations Spring `@RestController`). Une OpenAPI/Swagger est dans la roadmap.
+L'API complète est documentée par le code dans `node/server.js`. Une OpenAPI/Swagger est dans la roadmap.
 
 ## Démarrage rapide
 
 ### Prérequis
 
-- **Java 8** (`java -version` doit afficher `1.8.x`)
-- **MySQL 5.7+** local ou distant
-- **Maven** *(optionnel — le wrapper `./mvnw` fonctionne sans)*
+- **Node.js 22**
+- **PostgreSQL** local ou distant
 
 ### 1. Cloner et préparer la base
 
 ```bash
 git clone https://github.com/leandrosierra/pop-backend.git
 cd pop-backend
+npm ci
 
 # Créer le schéma + tables
-mysql -u root -p < SQL/DB_CREATION.sql
+psql "$POP_DB_URL" -f SQL/DB_CREATION.sql
 
 # (optionnel) Charger un seed de dev local
-mysql -u root -p poplitic < SQL/LOCAL_DEV_SEED.sql
+psql "$POP_DB_URL" -f SQL/LOCAL_DEV_SEED.sql
 ```
 
 ### 2. Variables d'environnement
@@ -104,7 +105,7 @@ mysql -u root -p poplitic < SQL/LOCAL_DEV_SEED.sql
 POP ne stocke **aucun secret dans le code**. Tout est injecté via env vars :
 
 ```bash
-export POP_DB_URL="jdbc:mysql://localhost:3306/poplitic?useSSL=false&serverTimezone=UTC"
+export POP_DB_URL="jdbc:postgresql://localhost:5432/pop"
 export POP_DB_USERNAME="pop"
 export POP_DB_PASSWORD="<un_vrai_mot_de_passe>"
 export POP_TOKEN_SECRET="<au moins 32 caractères aléatoires>"
@@ -122,26 +123,23 @@ export POP_INSTAGRAM_APP_SECRET=""
 ### 3. Lancer
 
 ```bash
-./mvnw spring-boot:run        # mode dev
-# ou
-./mvnw package
-java -jar target/app-server-1.0.0.war
+npm start
 ```
 
 L'API tourne par défaut sur `http://localhost:8080`. Le frontend Expo (cf. [`pop-mobile`](https://github.com/leandrosierra/pop-mobile)) pointera dessus via `EXPO_PUBLIC_POP_API_ORIGIN`.
 
-### 4. Tests
+### 4. Vérification syntaxe
 
 ```bash
-./mvnw test
+npm run check
 ```
 
 ## Déploiement
 
-Le `Dockerfile` à la racine bâtit une image **Tomcat 9 + Java 8** prête pour [Coolify](https://coolify.io/), [Caprover](https://caprover.com/), Render ou n'importe quel hôte Docker.
+Le `Dockerfile` à la racine bâtit une image **Node.js 22 Alpine** prête pour [Coolify](https://coolify.io/) ou n'importe quel hôte Docker.
 
 Pour l'instance officielle (`api.pop.leandro-sierra.com`), le déploiement passe par Coolify avec :
-- DB MySQL externe
+- DB PostgreSQL externe
 - Toutes les vars d'env définies en *Application Settings*
 - HTTPS via Let's Encrypt (Traefik intégré)
 
