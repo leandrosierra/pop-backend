@@ -1,19 +1,16 @@
-FROM maven:3.9-eclipse-temurin-8 AS build
+FROM node:22-alpine
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn package -DskipTests -B
-
-FROM tomcat:9.0-jre8
-# psql client to apply the SQL schema + seed at startup (schema owned by SQL/, not Hibernate)
-RUN apt-get update \
- && apt-get install -y --no-install-recommends postgresql-client \
- && rm -rf /var/lib/apt/lists/*
-RUN rm -rf /usr/local/tomcat/webapps/ROOT
-COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
+RUN apk add --no-cache postgresql-client
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY node ./node
 COPY SQL/DB_CREATION.sql /docker-init/DB_CREATION.sql
 COPY SQL/Init_script_pg.sql /docker-init/Init_script_pg.sql
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+ENV SERVER_PORT=8080
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=192"
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 CMD wget -q --spider http://127.0.0.1:8080/health || exit 1
 ENTRYPOINT ["/docker-entrypoint.sh"]

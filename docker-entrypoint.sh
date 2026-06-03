@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-# Apply the PostgreSQL schema + seed (owned by SQL/, idempotent) before starting Tomcat.
+# Apply the PostgreSQL schema + seed before starting the API.
 # Parse host/port/db from POP_DB_URL = jdbc:postgresql://HOST:PORT/DB[?...]
 URL="${POP_DB_URL#jdbc:postgresql://}"
 HOSTPORT="${URL%%/*}"
@@ -28,5 +28,5 @@ $PSQL -f /docker-init/DB_CREATION.sql 2>&1 | tail -5 || echo "[entrypoint] schem
 echo "[entrypoint] applying seed data (Init_script_pg.sql)..."
 $PSQL -f /docker-init/Init_script_pg.sql 2>&1 | tail -5 || echo "[entrypoint] seed apply warnings (non-fatal)"
 
-echo "[entrypoint] starting Tomcat..."
-exec catalina.sh run
+echo "[entrypoint] starting pop-backend node..."
+exec npm start
